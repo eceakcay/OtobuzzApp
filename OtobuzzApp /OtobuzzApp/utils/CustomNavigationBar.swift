@@ -16,10 +16,10 @@ struct CustomNavigationBar: View {
                     VStack(spacing: 5) {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 30))
-                            .foregroundColor(selectedTab == title1 ? .main : .black)
+                            .foregroundColor(selectedTab == title1 ? .orange : .black)
                         Text(title1)
                             .font(.system(size: 18))
-                            .foregroundColor(selectedTab == title1 ? .main : .black)
+                            .foregroundColor(selectedTab == title1 ? .orange : .black)
                     }
                 }
 
@@ -28,10 +28,10 @@ struct CustomNavigationBar: View {
                     VStack(spacing: 5) {
                         Image(systemName: "person")
                             .font(.system(size: 30))
-                            .foregroundColor(selectedTab == title2 ? .main : .black)
+                            .foregroundColor(selectedTab == title2 ? .orange : .black)
                         Text(title2)
                             .font(.system(size: 18))
-                            .foregroundColor(selectedTab == title2 ? .main : .black)
+                            .foregroundColor(selectedTab == title2 ? .orange : .black)
                     }
                 }
             }

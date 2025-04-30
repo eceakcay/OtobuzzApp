@@ -4,7 +4,7 @@ struct Home: View {
     @ObservedObject private var viewModel = HomeViewModel()
     @State private var selectedTab: String = "Ara"
     @State private var busJourneyViewModel = BusJourneyListViewModel(homeViewModel: HomeViewModel())
-
+    @State private var navigateToList = false
 
     var body: some View {
         NavigationStack {
@@ -55,7 +55,6 @@ struct Home: View {
 
                             }
                             .padding(.trailing, 130)
-
                         }
                     )
 
@@ -83,20 +82,28 @@ struct Home: View {
                                     .foregroundColor(.black)
                                     .shadow(radius: 2)
 
-                            }})
+                            }
+                        })
 
-                NavigationLink(destination: BusJourneyListView(viewModel: busJourneyViewModel)) {
-                    Button("Otobüs Ara") {
-                    }
-                    .padding()
-                    .frame(width: 270, height: 50)
-                    .background(Color.blue.opacity(0.9))
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
-                    .padding(.top, 15)
+                Button(action: {
+                    navigateToList = true
+                }) {
+                    Text("Otobüs Ara")
+                        .padding()
+                        .frame(width: 270, height: 50)
+                        .background(LinearGradient(gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]), startPoint: .top, endPoint: .bottom))
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                        .padding(.top, 15)
                 }
 
-                CustomNavigationBar(selectedTab: $selectedTab)             }
+                NavigationLink(destination: BusJourneyListView(viewModel: busJourneyViewModel), isActive: $navigateToList) {
+                    EmptyView()
+                }
+
+
+                CustomNavigationBar(selectedTab: $selectedTab)
+            }
             .navigationBarBackButtonHidden(true)
         }
     }

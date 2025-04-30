@@ -11,20 +11,29 @@ import SwiftUICore
 struct ProfileOptionRow: View {
     var icon: String
     var label: String
-    var color: Color = .primary
+    var color: Color = .black
     
     var body: some View {
         HStack {
             Image(systemName: icon)
                 .foregroundColor(color)
+            
             Text(label)
-                .foregroundColor(color)
+                .font(.body)
+                .fontWeight(.semibold)
+                .foregroundColor(.main)
+            
             Spacer()
+            
             Image(systemName: "chevron.right")
                 .foregroundColor(.gray)
         }
-        .padding(.vertical, 8)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.white)
+                .shadow(radius: 2)
+        )
     }
 }
-
 
