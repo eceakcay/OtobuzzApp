@@ -35,10 +35,13 @@ struct Profile: View {
                     NavigationLink(destination: Help()) {
                         ProfileOptionRow(icon: "questionmark.circle", label: "Yardım")
                     }
-
+                    NavigationLink(destination: SavedCardsView()) {
+                        ProfileOptionRow(icon: "creditcard", label: "Kayıtlı Kartlarım")
+                    }
                     NavigationLink(destination: LoginView(isLoggedIn: $isLoggedIn)) {
                         ProfileOptionRow(icon: "arrow.right.circle", label: "Çıkış Yap", color: .red)
                     }
+                    
                 }
                 .padding(.horizontal)
                 Spacer()
