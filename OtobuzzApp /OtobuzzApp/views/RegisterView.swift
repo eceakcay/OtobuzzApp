@@ -1,15 +1,14 @@
 import SwiftUI
 
 struct RegisterView: View {
-    @State private var email: String = ""
-    @State private var password: String = ""
+    @StateObject private var viewModel = RegisterViewModel()
     @State private var confirmPassword: String = ""
     @State private var isButtonPressed = false
     @State private var isEmailFocused = false
     @State private var isPasswordFocused = false
     @State private var isConfirmPasswordFocused = false
     @Environment(\.dismiss) var dismiss
-    
+
     var body: some View {
         ZStack {
             LinearGradient(
@@ -18,124 +17,107 @@ struct RegisterView: View {
                 endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
-            
+
             VStack(spacing: 24) {
                 Text("Kayıt Ol")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundColor(.orange)
                     .padding(.top, 20)
-                
+
                 Text("Hesap oluşturmak için bilgilerinizi girin.")
                     .font(.system(size: 16, design: .rounded))
                     .foregroundColor(.gray.opacity(0.8))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
-                
+
+                // Ad Soyad TextField
+                HStack {
+                    Image(systemName: "person")
+                        .foregroundColor(.orange.opacity(0.7))
+                        .frame(width: 20)
+
+                    TextField("Ad Soyad", text: $viewModel.ad)
+                        .autocapitalization(.words)
+                        .font(.system(size: 16, design: .rounded))
+                        .accentColor(.orange)
+                }
+                .paddingField(focused: false)
+
                 // Email TextField
                 HStack {
                     Image(systemName: "envelope")
                         .foregroundColor(.orange.opacity(0.7))
                         .frame(width: 20)
-                    
-                    TextField("E-posta", text: $email)
+
+                    TextField("E-posta", text: $viewModel.email)
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
                         .font(.system(size: 16, design: .rounded))
                         .accentColor(.orange)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 15)
-                        .fill(Color.white)
-                        .shadow(color: .orange.opacity(0.2), radius: 4, x: 0, y: 2)
-                )
-                .scaleEffect(isEmailFocused ? 1.02 : 1.0)
-                .animation(.easeInOut(duration: 0.2), value: isEmailFocused)
+                .paddingField(focused: isEmailFocused)
                 .onTapGesture {
-                    withAnimation {
-                        isEmailFocused = true
-                        isPasswordFocused = false
-                        isConfirmPasswordFocused = false
-                    }
+                    isEmailFocused = true
+                    isPasswordFocused = false
+                    isConfirmPasswordFocused = false
                 }
-                .onChange(of: email) { _ in
-                    withAnimation {
-                        isEmailFocused = false
-                    }
-                }
-                
+
                 // Password SecureField
                 HStack {
                     Image(systemName: "lock")
                         .foregroundColor(.orange.opacity(0.7))
                         .frame(width: 20)
-                    
-                    SecureField("Şifre", text: $password)
+
+                    SecureField("Şifre", text: $viewModel.sifre)
                         .font(.system(size: 16, design: .rounded))
                         .accentColor(.orange)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 15)
-                        .fill(Color.white)
-                        .shadow(color: .orange.opacity(0.2), radius: 4, x: 0, y: 2)
-                )
-                .scaleEffect(isPasswordFocused ? 1.02 : 1.0)
-                .animation(.easeInOut(duration: 0.2), value: isPasswordFocused)
+                .paddingField(focused: isPasswordFocused)
                 .onTapGesture {
-                    withAnimation {
-                        isPasswordFocused = true
-                        isEmailFocused = false
-                        isConfirmPasswordFocused = false
-                    }
+                    isPasswordFocused = true
+                    isEmailFocused = false
+                    isConfirmPasswordFocused = false
                 }
-                .onChange(of: password) { _ in
-                    withAnimation {
-                        isPasswordFocused = false
-                    }
-                }
-                
+
                 // Confirm Password SecureField
                 HStack {
                     Image(systemName: "lock")
                         .foregroundColor(.orange.opacity(0.7))
                         .frame(width: 20)
-                    
+
                     SecureField("Şifreyi Onayla", text: $confirmPassword)
                         .font(.system(size: 16, design: .rounded))
                         .accentColor(.orange)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 15)
-                        .fill(Color.white)
-                        .shadow(color: .orange.opacity(0.2), radius: 4, x: 0, y: 2)
-                )
-                .scaleEffect(isConfirmPasswordFocused ? 1.02 : 1.0)
-                .animation(.easeInOut(duration: 0.2), value: isConfirmPasswordFocused)
+                .paddingField(focused: isConfirmPasswordFocused)
                 .onTapGesture {
-                    withAnimation {
-                        isConfirmPasswordFocused = true
-                        isEmailFocused = false
-                        isPasswordFocused = false
-                    }
+                    isConfirmPasswordFocused = true
+                    isEmailFocused = false
+                    isPasswordFocused = false
                 }
-                .onChange(of: confirmPassword) { _ in
-                    withAnimation {
-                        isConfirmPasswordFocused = false
-                    }
+
+                if viewModel.showError, let error = viewModel.errorMessage {
+                    Text(error)
+                        .font(.system(size: 14))
+                        .foregroundColor(.red)
+                        .padding(.top, 4)
                 }
-                
+
                 Button(action: {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
                         isButtonPressed = true
                     }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         isButtonPressed = false
-                        dismiss()
+
+                        // Şifre eşleşmesini kontrol et
+                        guard viewModel.sifre == confirmPassword else {
+                            viewModel.showError = true
+                            viewModel.errorMessage = "Şifreler eşleşmiyor."
+                            return
+                        }
+
+                        viewModel.registerUser()
                     }
                 }) {
                     Text("Kayıt Ol")
@@ -155,8 +137,12 @@ struct RegisterView: View {
                 }
                 .scaleEffect(isButtonPressed ? 0.95 : 1.0)
                 .padding(.top, 8)
-                
+
                 Spacer()
+
+                NavigationLink(destination: Home(), isActive: $viewModel.navigateToHome) {
+                    EmptyView()
+                }
             }
             .padding(.horizontal, 32)
             .padding(.vertical, 40)
@@ -184,6 +170,23 @@ struct RegisterView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
+
+// MARK: - View Extension for Shared Styling
+extension View {
+    func paddingField(focused: Bool) -> some View {
+        self
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(Color.white)
+                    .shadow(color: .orange.opacity(0.2), radius: 4, x: 0, y: 2)
+            )
+            .scaleEffect(focused ? 1.02 : 1.0)
+            .animation(.easeInOut(duration: 0.2), value: focused)
+    }
+}
+
 
 #Preview {
     NavigationView {

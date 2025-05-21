@@ -52,91 +52,46 @@ class BusJourneyListViewModel: ObservableObject {
     
     // Sefer verilerini yükleme
     func loadJourneys() {
-        let loadedJourneys = [
-            Journey(
-                companyName: "EROVA",
-                companyLogo: "erova_logo",
-                departureTime: "01:00",
-                duration: "6s 1dk",
-                price: 460.0,
-                seatLayout: "2+1",
-                features: [],
-                seats: (1...40).map { i in
-                    Journey.Seat(
-                        id: i,
-                        isOccupied: Bool.random() && i % 2 == 0,
-                        gender: i % 4 == 0 ? .female : i % 2 == 0 ? .male : nil
-                    )
+        let from = homeViewModel.nereden
+        let to = homeViewModel.nereye
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dateString = formatter.string(from: currentDate)
+
+        let endpoint = "trips?from=\(from)&to=\(to)&tarih=\(dateString)"
+
+        APIService.shared.get(endpoint: endpoint, responseType: [Trip].self) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let trips):
+                    let mapped = trips.map { trip in
+                        Journey(
+                            companyName: trip.firma,
+                            companyLogo: trip.firma.lowercased(), // örnek: "kamilkoç" → logo adıyla eşleşiyorsa
+                            departureTime: trip.saat,
+                            duration: "6s", // sürenin API'den gelmediğini varsaydım
+                            price: Double(trip.fiyat),
+                            seatLayout: "2+1", // örnek varsayım
+                            features: [], // şu an API'de yok
+                            seats: trip.koltuklar.enumerated().map { index, seat in
+                                Journey.Seat(
+                                    id: seat.numara,
+                                    isOccupied: seat.secili,
+                                    gender: nil // gender backend'den gelmediği için nil
+                                )
+                            }
+                        )
+                    }
+                    self.journeys = mapped
+                    self.originalJourneys = mapped
+                    print("✅ API'den \(mapped.count) sefer geldi.")
+                case .failure(let error):
+                    print("❌ API Hatası: \(error.localizedDescription)")
                 }
-            ),
-            Journey(
-                companyName: "Isparta",
-                companyLogo: "ıspartapetrol_logo",
-                departureTime: "03:10",
-                duration: "5s 30dk",
-                price: 540.0,
-                seatLayout: "2+1",
-                features: ["100% İNDİRİM KODU", "Şehir İçi Servis"],
-                seats: (1...40).map { i in
-                    Journey.Seat(
-                        id: i,
-                        isOccupied: Bool.random() && i % 2 == 0,
-                        gender: i % 4 == 0 ? .female : i % 2 == 0 ? .male : nil
-                    )
-                }
-            ),
-            Journey(
-                companyName: "Pamukkale",
-                companyLogo: "pamukkale_logo",
-                departureTime: "05:30",
-                duration: "6s",
-                price: 600.0,
-                seatLayout: "2+1",
-                features: [],
-                seats: (1...40).map { i in
-                    Journey.Seat(
-                        id: i,
-                        isOccupied: Bool.random() && i % 2 == 0,
-                        gender: i % 4 == 0 ? .female : i % 2 == 0 ? .male : nil
-                    )
-                }
-            ),
-            Journey(
-                companyName: "KamilKoç",
-                companyLogo: "kamilkoc_logo",
-                departureTime: "08:30",
-                duration: "6s",
-                price: 490.0,
-                seatLayout: "2+1",
-                features: [],
-                seats: (1...40).map { i in
-                    Journey.Seat(
-                        id: i,
-                        isOccupied: Bool.random() && i % 2 == 0,
-                        gender: i % 4 == 0 ? .female : i % 2 == 0 ? .male : nil
-                    )
-                }
-            ),
-            Journey(
-                companyName: "Isparta",
-                companyLogo: "ıspartapetrol_logo",
-                departureTime: "12:00",
-                duration: "5s 15dk",
-                price: 540.0,
-                seatLayout: "2+1",
-                features: ["100% İNDİRİM KODU", "Şehir İçi Servis"],
-                seats: (1...40).map { i in
-                    Journey.Seat(
-                        id: i,
-                        isOccupied: Bool.random() && i % 2 == 0,
-                        gender: i % 4 == 0 ? .female : i % 2 == 0 ? .male : nil
-                    )
-                }
-            )
-        ]
-        journeys = loadedJourneys
-        originalJourneys = loadedJourneys
+            }
+        }
     }
+
     
     // Tarih formatlama (ör. "18 Nisan Cuma")
     func formatDate(_ date: Date) -> String {

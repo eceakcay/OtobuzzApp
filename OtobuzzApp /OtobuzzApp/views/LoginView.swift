@@ -2,19 +2,13 @@ import SwiftUI
 
 struct LoginView: View {
     @Binding var isLoggedIn: Bool
-    @State private var email: String = ""
-    @State private var password: String = ""
-    @State private var showError: Bool = false
-    @State private var errorMessage: String = ""
+    @StateObject private var viewModel = LoginViewModel()
     @State private var showPassword: Bool = false
     @State private var isButtonPressed: Bool = false
     @State private var isEmailFocused: Bool = false
     @State private var isPasswordFocused: Bool = false
-    @State private var navigateToBusJourneyList: Bool = false // Yönlendirme için
     
     private let primaryColor = Color.orange
-    private let correctEmail = "mine.kirmaci@example.com"
-    private let correctPassword = "123456"
 
     var body: some View {
         NavigationStack {
@@ -39,7 +33,7 @@ struct LoginView: View {
                         .foregroundColor(.orange)
                     
                     // Email TextField
-                    CustomTextField(placeholder: "E-posta", text: $email, icon: "envelope")
+                    CustomTextField(placeholder: "E-posta", text: $viewModel.email, icon: "envelope")
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
                         .scaleEffect(isEmailFocused ? 1.02 : 1.0)
@@ -50,14 +44,14 @@ struct LoginView: View {
                                 isPasswordFocused = false
                             }
                         }
-                        .onChange(of: email) { _ in
+                        .onChange(of: viewModel.email) { _ in
                             withAnimation {
                                 isEmailFocused = false
                             }
                         }
                     
                     // Password SecureField
-                    CustomSecureField(placeholder: "Şifre", text: $password, showPassword: $showPassword)
+                    CustomSecureField(placeholder: "Şifre", text: $viewModel.sifre, showPassword: $showPassword)
                         .scaleEffect(isPasswordFocused ? 1.02 : 1.0)
                         .animation(.easeInOut(duration: 0.2), value: isPasswordFocused)
                         .onTapGesture {
@@ -67,8 +61,8 @@ struct LoginView: View {
                             }
                         }
 
-                    if showError {
-                        Text(errorMessage)
+                    if viewModel.showError, let error = viewModel.errorMessage {
+                        Text(error)
                             .font(.system(size: 14, design: .rounded))
                             .foregroundColor(.red)
                             .padding(.horizontal)
@@ -81,7 +75,7 @@ struct LoginView: View {
                         }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                             isButtonPressed = false
-                            login()
+                            viewModel.loginUser()
                         }
                     }) {
                         Text("Giriş Yap")
@@ -123,11 +117,16 @@ struct LoginView: View {
         
                     NavigationLink(
                         destination: Home(),
-                        isActive: $navigateToBusJourneyList
+                        isActive: Binding(
+                            get: { viewModel.navigateToHome },
+                            set: { newValue in
+                                viewModel.navigateToHome = newValue
+                                isLoggedIn = newValue
+                            }
+                        )
                     ) {
                         EmptyView()
                     }
-
                 }
                 .padding(.horizontal, 32)
                 .padding(.vertical, 40)
@@ -146,33 +145,8 @@ struct LoginView: View {
             .navigationBarHidden(true)
         }
     }
-    
-    private func login() {
-        withAnimation {
-            if email.isEmpty || password.isEmpty {
-                showError = true
-                errorMessage = "Lütfen tüm alanları doldurun."
-            } else if !isValidEmail(email) {
-                showError = true
-                errorMessage = "Geçerli bir e-posta girin."
-            } else if email != correctEmail || password != correctPassword {
-                showError = true
-                errorMessage = "E-posta veya şifre hatalı."
-            } else {
-                showError = false
-                isLoggedIn = true
-                navigateToBusJourneyList = true 
-                print("Giriş başarılı, isLoggedIn: \(isLoggedIn)")
-            }
-        }
-    }
-    
-    private func isValidEmail(_ email: String) -> Bool {
-        let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
-        let predicate = NSPredicate(format: "SELF MATCHES %@", emailRegEx)
-        return predicate.evaluate(with: email)
-    }
 }
+
 
 struct CustomTextField: View {
     let placeholder: String
