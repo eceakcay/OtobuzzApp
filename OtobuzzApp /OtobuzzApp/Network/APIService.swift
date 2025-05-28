@@ -21,9 +21,13 @@ class APIService {
         responseType: T.Type,
         completion: @escaping (Result<T, Error>) -> Void
     ) {
-        guard let url = URL(string: "\(baseURL)/\(endpoint)") else {
+        guard let encodedEndpoint = endpoint.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "\(baseURL)/\(encodedEndpoint)") else {
+            print("❌ Hatalı URL: \(endpoint)")
             return completion(.failure(APIError.invalidURL))
         }
+
+        print("🌐 Full URL: \(url.absoluteString)")
 
         let request = URLRequest(url: url)
 
@@ -40,6 +44,7 @@ class APIService {
 
             do {
                 let decoded = try JSONDecoder().decode(T.self, from: data)
+                print("✅ GET Başarılı: \(decoded)")
                 completion(.success(decoded))
             } catch {
                 print("❌ GET Decode Error: \(error)")
@@ -47,6 +52,11 @@ class APIService {
                 completion(.failure(error))
             }
         }.resume()
+    }
+    
+    
+    func getCities(completion: @escaping (Result<[String], Error>) -> Void) {
+        get(endpoint: "cities", responseType: [String].self, completion: completion)
     }
 
     // MARK: - Generic POST
@@ -86,6 +96,7 @@ class APIService {
 
             do {
                 let decoded = try JSONDecoder().decode(U.self, from: data)
+                print("✅ POST Başarılı: \(decoded)")
                 completion(.success(decoded))
             } catch {
                 print("❌ POST Decode Error: \(error)")

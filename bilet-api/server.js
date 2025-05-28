@@ -1,32 +1,35 @@
+// Gerekli modülleri yükle
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 
-// Route dosyaları
+// Route dosyalarını içe aktar
 const authRoutes = require('./routes/authRoutes');
 const tripRoutes = require('./routes/tripRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 const cardRoutes = require('./routes/cardRoutes');
 
-// Ortam değişkenlerini yükle
+// Ortam değişkenlerini yükle (.env dosyasından)
 dotenv.config();
 
-// Veritabanına bağlan
+// MongoDB bağlantısını başlat
 connectDB();
 
-// Uygulama oluştur
+// Express uygulamasını oluştur
 const app = express();
-app.use(cors());
-app.use(express.json());
 
-// API rotalarını tanımla
-app.use('/api/auth', authRoutes);
-app.use('/api/trips', tripRoutes);
-app.use('/api/tickets', ticketRoutes);
-app.use('/api/cards', cardRoutes);
+// Middleware tanımlamaları
+app.use(cors());             // CORS desteği (frontend erişimi için)
+app.use(express.json());     // JSON body parse edebilmek için
 
-// Sunucuyu başlat
+// API route'ları tanımla
+app.use('/api/auth', authRoutes);       // Kullanıcı giriş/kayıt
+app.use('/api/trips', tripRoutes);      // Sefer işlemleri
+app.use('/api/tickets', ticketRoutes);  // Bilet işlemleri
+app.use('/api/cards', cardRoutes);      // Kart işlemleri
+
+// Sunucuyu belirtilen portta çalıştır
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Sunucu ${PORT} portunda çalışıyor`);

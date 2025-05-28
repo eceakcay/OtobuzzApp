@@ -2,7 +2,6 @@
 //  OtobuzzApp
 //
 //  Created by Ece Akcay on 17.04.2025.
-//
 
 import Foundation
 
@@ -13,19 +12,19 @@ class BusJourneyListViewModel: ObservableObject {
     @Published var showingFilterOptions: Bool = false
     @Published var showingSeatSelection: Bool = false // Koltuk seçimi için
     @Published var selectedJourney: Journey? // Seçilen sefer
-    
+
     // HomeViewModel’den gelen veriler
     let homeViewModel: HomeViewModel
-    
+
     // Orijinal seferleri saklamak için (filtreleme sırasında kullanılacak)
     private var originalJourneys: [Journey] = []
-    
+
     init(homeViewModel: HomeViewModel) {
         self.homeViewModel = homeViewModel
         self.currentDate = homeViewModel.selectedDate
         loadJourneys()
     }
-    
+
     // Model: Journey yapısı
     struct Journey: Identifiable {
         let id = UUID()
@@ -37,19 +36,19 @@ class BusJourneyListViewModel: ObservableObject {
         let seatLayout: String
         let features: [String]
         let seats: [Seat] // Koltuk verisi
-        
+
         struct Seat: Identifiable {
             let id: Int
             let isOccupied: Bool
             let gender: Gender? // nil ise boş koltuk
         }
-        
-        enum Gender {
-            case male
-            case female
+
+        enum Gender: String, Codable {
+            case male = "Erkek"
+            case female = "Kadın"
         }
     }
-    
+
     // Sefer verilerini yükleme
     func loadJourneys() {
         let from = homeViewModel.nereden
@@ -67,17 +66,17 @@ class BusJourneyListViewModel: ObservableObject {
                     let mapped = trips.map { trip in
                         Journey(
                             companyName: trip.firma,
-                            companyLogo: trip.firma.lowercased(), // örnek: "kamilkoç" → logo adıyla eşleşiyorsa
+                            companyLogo: trip.firma.lowercased(),
                             departureTime: trip.saat,
-                            duration: "6s", // sürenin API'den gelmediğini varsaydım
+                            duration: "6s",
                             price: Double(trip.fiyat),
-                            seatLayout: "2+1", // örnek varsayım
-                            features: [], // şu an API'de yok
+                            seatLayout: "2+1",
+                            features: [],
                             seats: trip.koltuklar.enumerated().map { index, seat in
                                 Journey.Seat(
                                     id: seat.numara,
                                     isOccupied: seat.secili,
-                                    gender: nil // gender backend'den gelmediği için nil
+                                    gender: nil
                                 )
                             }
                         )
@@ -92,7 +91,6 @@ class BusJourneyListViewModel: ObservableObject {
         }
     }
 
-    
     // Tarih formatlama (ör. "18 Nisan Cuma")
     func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
@@ -100,25 +98,31 @@ class BusJourneyListViewModel: ObservableObject {
         formatter.locale = Locale(identifier: "tr_TR")
         return formatter.string(from: date)
     }
-    
+
     // Tarih navigasyonu
     func previousDay() {
-        currentDate = Calendar.current.date(byAdding: .day, value: -1, to: currentDate)!
+        if let newDate = Calendar.current.date(byAdding: .day, value: -1, to: currentDate) {
+            currentDate = newDate
+            loadJourneys()
+        }
     }
-    
+
     func nextDay() {
-        currentDate = Calendar.current.date(byAdding: .day, value: 1, to: currentDate)!
+        if let newDate = Calendar.current.date(byAdding: .day, value: 1, to: currentDate) {
+            currentDate = newDate
+            loadJourneys()
+        }
     }
-    
+
     // Sıralama işlemleri
     func sortByPriceAscending() {
         journeys.sort { $0.price < $1.price }
     }
-    
+
     func sortByPriceDescending() {
         journeys.sort { $0.price > $1.price }
     }
-    
+
     // Filtreleme işlemleri
     func filterByTimeRange(startHour: Int, endHour: Int) {
         journeys = originalJourneys.filter { journey in
@@ -126,12 +130,13 @@ class BusJourneyListViewModel: ObservableObject {
             return hour >= startHour && hour < endHour
         }
     }
-    
+
     func filterByCompany(_ companyName: String) {
         journeys = originalJourneys.filter { $0.companyName == companyName }
     }
-    
+
     func resetFilters() {
         journeys = originalJourneys
     }
 }
+

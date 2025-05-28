@@ -8,16 +8,34 @@
 import Foundation
 
 class HomeViewModel: ObservableObject {
-    @Published var nereden: String
-    @Published var nereye: String
-    @Published var selectedDate: Date
-
-    let cities = ["İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana", "Konya", "Gaziantep"]
+    @Published var nereden: String = ""
+    @Published var nereye: String = ""
+    @Published var selectedDate: Date = Date()
+    @Published var cities: [String] = []
 
     init() {
-        // Test için varsayılan olarak farklı şehirler verelim
-        self.nereden = "İstanbul"
-        self.nereye = "Ankara"
-        self.selectedDate = Date()
+        fetchCities()
+    }
+
+    func fetchCities() {
+        APIService.shared.getCities { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let sehirler):
+                    self?.cities = sehirler
+                    // İlk 2 şehri otomatik ata
+                    if let first = sehirler.first {
+                        self?.nereden = first
+                        self?.nereye = sehirler.count > 1 ? sehirler[1] : first
+                    }
+                case .failure(let error):
+                    print("❌ Şehirler alınamadı: \(error.localizedDescription)")
+                    // Hata durumunda fallback veriler
+                    self?.cities = ["İstanbul", "Ankara", "İzmir", "Bursa"]
+                    self?.nereden = "İstanbul"
+                    self?.nereye = "Ankara"
+                }
+            }
+        }
     }
 }

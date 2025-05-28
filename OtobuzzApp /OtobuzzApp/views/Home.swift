@@ -1,17 +1,17 @@
 import SwiftUI
 
 struct Home: View {
-    @ObservedObject private var viewModel = HomeViewModel()
+    @StateObject private var viewModel = HomeViewModel() // StateObject olmalı
     @State private var selectedTab: String = "Ara"
-    @State private var busJourneyViewModel = BusJourneyListViewModel(homeViewModel: HomeViewModel())
     @State private var navigateToList = false
 
     var body: some View {
         NavigationStack {
             VStack {
                 CustomAppBar()
+                
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.white.opacity(1))
+                    .fill(Color.white)
                     .shadow(radius: 2)
                     .frame(width: 350, height: 220)
                     .padding()
@@ -52,38 +52,35 @@ struct Home: View {
                                 .pickerStyle(MenuPickerStyle())
                                 .frame(maxWidth: 120)
                                 .cornerRadius(8)
-
                             }
                             .padding(.trailing, 130)
                         }
                     )
 
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.white.opacity(1))
+                    .fill(Color.white)
                     .shadow(radius: 2)
                     .frame(width: 350, height: 130)
                     .padding()
                     .overlay(
-                        ZStack {
-                            VStack(alignment: .leading) {
-                                Text("GİDİŞ TARİHİ")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.main)
-                                    .padding(.trailing, 90)
-                                    .padding(.bottom, 20)
+                        VStack(alignment: .leading) {
+                            Text("GİDİŞ TARİHİ")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.main)
+                                .padding(.trailing, 90)
+                                .padding(.bottom, 20)
 
-                                DatePicker("Tarihi Seç", selection: $viewModel.selectedDate, displayedComponents: .date)
-                                    .datePickerStyle(CompactDatePickerStyle())
-                                    .frame(maxWidth: 205)
-                                    .padding(.leading, 20)
-                                    .background(Color.white)
-                                    .cornerRadius(8)
-                                    .foregroundColor(.black)
-                                    .shadow(radius: 2)
-
-                            }
-                        })
+                            DatePicker("Tarihi Seç", selection: $viewModel.selectedDate, displayedComponents: .date)
+                                .datePickerStyle(CompactDatePickerStyle())
+                                .frame(maxWidth: 205)
+                                .padding(.leading, 20)
+                                .background(Color.white)
+                                .cornerRadius(8)
+                                .foregroundColor(.black)
+                                .shadow(radius: 2)
+                        }
+                    )
 
                 Button(action: {
                     navigateToList = true
@@ -97,10 +94,12 @@ struct Home: View {
                         .padding(.top, 15)
                 }
 
-                NavigationLink(destination: BusJourneyListView(viewModel: busJourneyViewModel), isActive: $navigateToList) {
+                NavigationLink(
+                    destination: BusJourneyListView(viewModel: BusJourneyListViewModel(homeViewModel: viewModel)),
+                    isActive: $navigateToList
+                ) {
                     EmptyView()
                 }
-
 
                 CustomNavigationBar(selectedTab: $selectedTab)
             }

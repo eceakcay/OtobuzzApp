@@ -5,11 +5,16 @@
 //  Created by Mine Kırmacı on 20.04.2025.
 //
 
+//  BusJourneyListView.swift
+//  OtobuzzApp
+//
+//  Created by Mine Kırmacı on 20.04.2025.
+
 import SwiftUI
 
 struct BusJourneyListView: View {
     @ObservedObject var viewModel: BusJourneyListViewModel
-    
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -19,7 +24,7 @@ struct BusJourneyListView: View {
                     endPoint: .bottomTrailing
                 )
                 .ignoresSafeArea()
-                
+
                 VStack(spacing: 0) {
                     // Sırala ve Filtrele Butonları
                     HStack {
@@ -47,9 +52,9 @@ struct BusJourneyListView: View {
                         .sheet(isPresented: $viewModel.showingSortOptions) {
                             SortOptionsView(viewModel: viewModel)
                         }
-                        
+
                         Spacer()
-                        
+
                         Button(action: {
                             viewModel.showingFilterOptions = true
                         }) {
@@ -79,7 +84,7 @@ struct BusJourneyListView: View {
                     .padding(.top, 10)
                     .padding(.bottom, 5)
                     .background(Color.white)
-                    
+
                     // Başlık ve Tarih Navigasyonu
                     VStack {
                         Text("\(viewModel.homeViewModel.nereden) → \(viewModel.homeViewModel.nereye)")
@@ -87,7 +92,7 @@ struct BusJourneyListView: View {
                             .foregroundColor(.orange)
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(.top, 10)
-                        
+
                         HStack {
                             Button(action: {
                                 viewModel.previousDay()
@@ -100,15 +105,15 @@ struct BusJourneyListView: View {
                                     .background(Color.gray.opacity(0.7))
                                     .cornerRadius(8)
                             }
-                            
+
                             Spacer()
-                            
+
                             Text(viewModel.formatDate(viewModel.currentDate))
                                 .font(.system(size: 16, weight: .bold, design: .rounded))
                                 .foregroundColor(.black)
-                            
+
                             Spacer()
-                            
+
                             Button(action: {
                                 viewModel.nextDay()
                             }) {
@@ -125,25 +130,36 @@ struct BusJourneyListView: View {
                         .padding(.vertical, 8)
                     }
                     .background(Color.white)
-                    
+
                     // Sefer Listesi
-                    ScrollView {
-                        LazyVStack(spacing: 15) {
-                            ForEach(viewModel.journeys) { journey in
-                                JourneyCard(journey: journey, from: viewModel.homeViewModel.nereden, to: viewModel.homeViewModel.nereye)
-                                    .environmentObject(viewModel)
+                    if viewModel.journeys.isEmpty {
+                        Spacer()
+                        Text("Uygun sefer bulunamadı.")
+                            .foregroundColor(.gray)
+                            .padding()
+                        Spacer()
+                    } else {
+                        ScrollView {
+                            LazyVStack(spacing: 15) {
+                                ForEach(viewModel.journeys) { journey in
+                                    JourneyCard(journey: journey, from: viewModel.homeViewModel.nereden, to: viewModel.homeViewModel.nereye)
+                                        .environmentObject(viewModel)
+                                }
                             }
+                            .padding(.vertical, 10)
+                            .padding(.horizontal)
                         }
-                        .padding(.vertical, 10)
-                        .padding(.horizontal)
+                        .background(Color.gray.opacity(0.05))
                     }
-                    .background(Color.gray.opacity(0.05))
                 }
             }
             .sheet(isPresented: $viewModel.showingSeatSelection) {
                 if let selectedJourney = viewModel.selectedJourney {
                     BusSeatSelectionView(journey: selectedJourney)
                 }
+            }
+            .onChange(of: viewModel.currentDate) { _ in
+                viewModel.loadJourneys()
             }
             .navigationBarHidden(true)
         }
