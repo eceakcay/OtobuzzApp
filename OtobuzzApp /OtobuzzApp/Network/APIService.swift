@@ -56,7 +56,7 @@ class APIService {
     
     
     func getCities(completion: @escaping (Result<[String], Error>) -> Void) {
-        get(endpoint: "cities", responseType: [String].self, completion: completion)
+        get(endpoint: "trips/cities", responseType: [String].self, completion: completion)
     }
 
     // MARK: - Generic POST
