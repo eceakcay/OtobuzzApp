@@ -88,4 +88,13 @@ const getTripDetail = async (req, res) => {
   }
 };
 
-module.exports = { createTrip, getTrips, getTripDetail,getCities };
+const updateTrip = async (req, res) => {
+  try {
+    const updatedTrip = await Trip.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updatedTrip);
+  } catch (error) {
+    res.status(500).json({ message: "Güncelleme başarısız", error });
+  }
+};
+
+module.exports = { createTrip, getTrips, getTripDetail,getCities,updateTrip };

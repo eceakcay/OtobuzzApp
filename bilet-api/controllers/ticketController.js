@@ -1,6 +1,7 @@
 const Ticket = require('../models/Ticket');
 const Trip = require('../models/Trip');
 const User = require('../models/User');
+const { sendTicketEmail } = require('../utils/emailService'); // ✉️ Mail servisini dahil ettik
 
 const buyTicket = async (req, res) => {
   const { userId, tripId, koltukNo, cinsiyet } = req.body;
@@ -8,6 +9,9 @@ const buyTicket = async (req, res) => {
   try {
     const trip = await Trip.findById(tripId);
     if (!trip) return res.status(404).json({ message: 'Sefer bulunamadı' });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
 
     // Koltuğu işaretle
     const koltuk = trip.koltuklar.find(k => k.numara === koltukNo);
@@ -21,6 +25,16 @@ const buyTicket = async (req, res) => {
     await ticket.save();
 
     await User.findByIdAndUpdate(userId, { $push: { tickets: ticket._id } });
+
+    // ✅ Bilet bilgilerini e-posta ile gönder
+    await sendTicketEmail(user.email, {
+      from: trip.from,
+      to: trip.to,
+      date: trip.date,
+      time: trip.saat,
+      seat: koltukNo,
+      company: trip.firma
+    });
 
     res.status(200).json({ message: 'Bilet alındı', ticket });
   } catch (err) {
@@ -51,6 +65,5 @@ const completePayment = async (req, res) => {
     res.status(500).json({ message: 'Ödeme sırasında hata oluştu', error: err });
   }
 };
-
 
 module.exports = { buyTicket, getUserTickets, completePayment };

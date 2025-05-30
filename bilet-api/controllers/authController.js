@@ -19,6 +19,7 @@ const register = async (req, res) => {
       message: 'Kayıt başarılı',
       user: {
         _id: user._id,
+        ad: user.ad,
         email: user.email
       },
       token: token

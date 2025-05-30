@@ -25,6 +25,7 @@ struct RegisterResponse: Codable {
 // 👤 API'den gelen user objesi
 struct RegisteredUser: Codable {
     let _id: String
+    let ad: String     
     let email: String
 }
 

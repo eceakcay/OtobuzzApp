@@ -34,9 +34,14 @@ class RegisterViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                    UserDefaults.standard.set(response.user._id, forKey: "userId")
+                    // ✅ Kayıt başarılı → ID'yi kaydet
+                    UserDefaults.standard.set(response.user._id, forKey: "loggedInUserId")
+
+                    // ✅ Konsola debug çıktısı
+                    print("✅ Kayıt başarılı, userId: \(response.user._id)")
+                    print("🧠 Kaydedilen ID (UserDefaults): \(UserDefaults.standard.string(forKey: "loggedInUserId") ?? "boş")")
+
                     self.navigateToHome = true
-                    print("✅ Kayıt başarılı: \(response.user.email)")
                 case .failure(let error):
                     self.showError = true
                     self.errorMessage = "Kayıt başarısız: \(error.localizedDescription)"
@@ -52,4 +57,3 @@ class RegisterViewModel: ObservableObject {
         return NSPredicate(format: "SELF MATCHES %@", regex).evaluate(with: email)
     }
 }
-

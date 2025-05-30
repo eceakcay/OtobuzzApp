@@ -1,8 +1,3 @@
-//  BusJourneyListViewModel.swift
-//  OtobuzzApp
-//
-//  Created by Ece Akcay on 17.04.2025.
-
 import Foundation
 
 class BusJourneyListViewModel: ObservableObject {
@@ -10,13 +5,10 @@ class BusJourneyListViewModel: ObservableObject {
     @Published var currentDate: Date
     @Published var showingSortOptions: Bool = false
     @Published var showingFilterOptions: Bool = false
-    @Published var showingSeatSelection: Bool = false // Koltuk seçimi için
-    @Published var selectedJourney: Journey? // Seçilen sefer
+    @Published var showingSeatSelection: Bool = false
+    @Published var selectedJourney: Journey?
 
-    // HomeViewModel’den gelen veriler
     let homeViewModel: HomeViewModel
-
-    // Orijinal seferleri saklamak için (filtreleme sırasında kullanılacak)
     private var originalJourneys: [Journey] = []
 
     init(homeViewModel: HomeViewModel) {
@@ -25,7 +17,6 @@ class BusJourneyListViewModel: ObservableObject {
         loadJourneys()
     }
 
-    // Model: Journey yapısı
     struct Journey: Identifiable {
         let id = UUID()
         let companyName: String
@@ -35,12 +26,12 @@ class BusJourneyListViewModel: ObservableObject {
         let price: Double
         let seatLayout: String
         let features: [String]
-        let seats: [Seat] // Koltuk verisi
+        let seats: [Seat]
 
         struct Seat: Identifiable {
             let id: Int
             let isOccupied: Bool
-            let gender: Gender? // nil ise boş koltuk
+            let gender: Gender?
         }
 
         enum Gender: String, Codable {
@@ -49,7 +40,6 @@ class BusJourneyListViewModel: ObservableObject {
         }
     }
 
-    // Sefer verilerini yükleme
     func loadJourneys() {
         let from = homeViewModel.nereden
         let to = homeViewModel.nereye
@@ -72,11 +62,21 @@ class BusJourneyListViewModel: ObservableObject {
                             price: Double(trip.fiyat),
                             seatLayout: "2+1",
                             features: [],
-                            seats: trip.koltuklar.enumerated().map { index, seat in
+                            seats: trip.koltuklar.map { seat in
                                 Journey.Seat(
                                     id: seat.numara,
                                     isOccupied: seat.secili,
-                                    gender: nil
+                                    gender: {
+                                        if seat.secili {
+                                            switch seat.cinsiyet {
+                                            case "Kadın": return .female
+                                            case "Erkek": return .male
+                                            default: return nil
+                                            }
+                                        } else {
+                                            return nil
+                                        }
+                                    }()
                                 )
                             }
                         )
@@ -91,7 +91,6 @@ class BusJourneyListViewModel: ObservableObject {
         }
     }
 
-    // Tarih formatlama (ör. "18 Nisan Cuma")
     func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "d MMMM EEEE"
@@ -99,7 +98,6 @@ class BusJourneyListViewModel: ObservableObject {
         return formatter.string(from: date)
     }
 
-    // Tarih navigasyonu
     func previousDay() {
         if let newDate = Calendar.current.date(byAdding: .day, value: -1, to: currentDate) {
             currentDate = newDate
@@ -114,7 +112,6 @@ class BusJourneyListViewModel: ObservableObject {
         }
     }
 
-    // Sıralama işlemleri
     func sortByPriceAscending() {
         journeys.sort { $0.price < $1.price }
     }
@@ -123,7 +120,6 @@ class BusJourneyListViewModel: ObservableObject {
         journeys.sort { $0.price > $1.price }
     }
 
-    // Filtreleme işlemleri
     func filterByTimeRange(startHour: Int, endHour: Int) {
         journeys = originalJourneys.filter { journey in
             let hour = Int(journey.departureTime.split(separator: ":")[0]) ?? 0
@@ -139,4 +135,3 @@ class BusJourneyListViewModel: ObservableObject {
         journeys = originalJourneys
     }
 }
-

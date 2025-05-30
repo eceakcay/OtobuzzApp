@@ -31,11 +31,16 @@ class LoginViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                    UserDefaults.standard.set(response.userId, forKey: "userId")
+                    // ✅ Kullanıcı ID’sini kaydet (Profil ekranı buradan okuyacak)
+                    UserDefaults.standard.set(response.userId, forKey: "loggedInUserId")
+
+                    // ✅ Konsola debug çıktısı
+                    print("✅ Giriş başarılı, userId: \(response.userId)")
+                    print("🧠 Kaydedilen ID (UserDefaults): \(UserDefaults.standard.string(forKey: "loggedInUserId") ?? "YOK")")
+
                     self.showError = false
                     self.loginSuccess = true
                     self.navigateToHome = true
-                    print("✅ Giriş başarılı, userId: \(response.userId)")
                 case .failure(let error):
                     self.showError = true
                     self.errorMessage = "E-posta veya şifre hatalı."

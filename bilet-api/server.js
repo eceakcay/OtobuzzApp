@@ -28,6 +28,8 @@ app.use('/api/auth', authRoutes);       // Kullanıcı giriş/kayıt
 app.use('/api/trips', tripRoutes);      // Sefer işlemleri
 app.use('/api/tickets', ticketRoutes);  // Bilet işlemleri
 app.use('/api/cards', cardRoutes);      // Kart işlemleri
+app.use('/api/users', require('./routes/userRoutes'));
+
 
 // Sunucuyu belirtilen portta çalıştır
 const PORT = process.env.PORT || 3000;

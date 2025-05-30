@@ -26,4 +26,5 @@ struct Trip: Codable, Identifiable {
 struct Seat: Codable {
     let numara: Int
     let secili: Bool
+    let cinsiyet: String?
 }
