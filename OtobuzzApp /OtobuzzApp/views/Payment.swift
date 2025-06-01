@@ -28,138 +28,98 @@ struct Payment: View {
                     .padding(.top, 145)
                     .padding(.leading, 90)
             }
+            .padding(.bottom, 40)
 
             // Card Information Form
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.white)
-                .shadow(radius: 2)
-                .frame(width: 350, height: 350)
-                .padding()
-                .overlay(
-                    VStack(alignment: .leading) {
-                        Text("KART BİLGİLERİ")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.orange)
-                            .padding(.top, 20)
-                            .padding(.leading, 20)
-                        
-                        TextField("Kart Numarası", text: $paymentViewModel.cardNumber)
-                            .keyboardType(.numberPad)
-                            .padding()
-                            .background(Color.white)
-                            .cornerRadius(8)
-                            .shadow(radius: 2)
-                            .padding(.horizontal, 20)
-                            .onChange(of: paymentViewModel.cardNumber) { oldValue, newValue in
-                                paymentViewModel.cardNumber = paymentViewModel.filterInput(newValue)
-                            }
-                        
-                        HStack {
-                            TextField("Son Kullanma Tarihi", text: $paymentViewModel.expirationDate)
-                                .keyboardType(.numberPad)
-                                .padding()
-                                .background(Color.white)
-                                .cornerRadius(8)
-                                .shadow(radius: 2)
-                                .onChange(of: paymentViewModel.expirationDate) { oldValue, newValue in
-                                    paymentViewModel.expirationDate = paymentViewModel.filterInput(newValue)
-                                }
-                            
-                            TextField("CVV", text: $paymentViewModel.cvv)
-                                .keyboardType(.numberPad)
-                                .padding()
-                                .background(Color.white)
-                                .cornerRadius(8)
-                                .shadow(radius: 2)
-                                .onChange(of: paymentViewModel.cvv) { oldValue, newValue in
-                                    paymentViewModel.cvv = paymentViewModel.filterInput(newValue)
-                                }
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        Text("Ödeme Tutarı: \(paymentViewModel.paymentAmount, specifier: "%.2f") TL")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.orange)
-                            .padding(.top, 20)
-                            .padding(.leading, 20)
-                        
-                        Button(action: {
-                            paymentViewModel.processPayment()
-                            // Check if the card number, expiration date, and CVV are valid before showing the alert
-                            if isCardValid() {
-                                showSaveCardAlert = true // Show alert after payment processing
-                            }
-                        }) {
-                            Text("Ödeme Yap")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
-                                        startPoint: .top,
-                                        endPoint: .bottom
-                                    )
-                                )
-                                .cornerRadius(8)
-                                .shadow(color: .orange.opacity(0.2), radius: 4)
-                        }
-                        .padding(.top, 20)
-                        .padding(.horizontal, 20)
-                        
-                        if paymentViewModel.paymentStarted {
-                            Text(paymentViewModel.paymentStatus)
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(paymentViewModel.isPaymentSuccessful() ? .blue : .red)
-                                .padding(.leading, 20)
-                        }
-                    }
-                )
+            VStack(alignment: .leading, spacing: 20) {
+                           Text("Kart Bilgileri")
+                               .font(.title2)
+                               .fontWeight(.bold)
+                               .foregroundColor(.orange)
 
-            Spacer()
-        }
-        .navigationBarBackButtonHidden(true)
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [.orange.opacity(0.05), .white]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-        )
-        .alert("Kartı kaydetmek ister misiniz?", isPresented: $showSaveCardAlert) {
-            Button("Hayır", role: .cancel) {}
-            Button("Evet") {
-                // Save card if user confirms
-                let card = CardModel(
-                    cardHolderName: "Mine Kırmacı", // Or you can allow the user to input their name
-                    cardNumber: maskedCardNumber(paymentViewModel.cardNumber),
-                    expiryDate: paymentViewModel.expirationDate,
-                    imageName: "visa"
-                )
-                SavedCardsManager.shared.addCard(card)
-                navigateToSavedCards = true
-            }
-        }
-        .background(
-            NavigationLink(destination: SavedCardsView(), isActive: $navigateToSavedCards) {
-                EmptyView()
-            }
-        )
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "chevron.left")
-                        .foregroundColor(.orange)
-                }
-            }
-        }
-    }
+                           TextField("Kart Numarası", text: $paymentViewModel.cardNumber)
+                               .keyboardType(.numberPad)
+                               .modifier(FormTextFieldStyle())
+                               .onChange(of: paymentViewModel.cardNumber) { _, newValue in
+                                   paymentViewModel.cardNumber = paymentViewModel.filterInput(newValue)
+                               }
+
+                           HStack(spacing: 15) {
+                               TextField("Son Kullanma", text: $paymentViewModel.expirationDate)
+                                   .keyboardType(.numberPad)
+                                   .modifier(FormTextFieldStyle())
+                                   .onChange(of: paymentViewModel.expirationDate) { _, newValue in
+                                       paymentViewModel.expirationDate = paymentViewModel.filterInput(newValue)
+                                   }
+
+                               TextField("CVV", text: $paymentViewModel.cvv)
+                                   .keyboardType(.numberPad)
+                                   .modifier(FormTextFieldStyle())
+                                   .onChange(of: paymentViewModel.cvv) { _, newValue in
+                                       paymentViewModel.cvv = paymentViewModel.filterInput(newValue)
+                                   }
+                           }
+
+                           Text("Ödeme Tutarı: \(paymentViewModel.paymentAmount, specifier: "%.2f") TL")
+                               .font(.headline)
+                               .foregroundColor(.orange)
+
+                           Button(action: {
+                               paymentViewModel.processPayment()
+                               if isCardValid() {
+                                   showSaveCardAlert = true
+                               }
+                           }) {
+                               Text("Ödeme Yap")
+                                   .padding()
+                                   .frame(width: 270, height: 50)
+                                   .background(LinearGradient(gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]), startPoint: .top, endPoint: .bottom))
+                                   .foregroundColor(.white)
+                                   .cornerRadius(8)
+                           }
+
+                           if paymentViewModel.paymentStarted {
+                               Text(paymentViewModel.paymentStatus)
+                                   .font(.headline)
+                                   .foregroundColor(paymentViewModel.isPaymentSuccessful() ? .green : .red)
+                           }
+                       }
+                       .padding(.horizontal, 30)
+
+                       Spacer()
+                   }
+                   .navigationBarBackButtonHidden(true)
+                   .background(
+                       LinearGradient(colors: [.white, .orange.opacity(0.1)], startPoint: .top, endPoint: .bottom)
+                           .ignoresSafeArea()
+                   )
+                   .alert("Kartı kaydetmek ister misiniz?", isPresented: $showSaveCardAlert) {
+                       Button("Hayır", role: .cancel) {}
+                       Button("Evet") {
+                           let card = CardModel(
+                               cardHolderName: "Mine Kırmacı",
+                               cardNumber: maskedCardNumber(paymentViewModel.cardNumber),
+                               expiryDate: paymentViewModel.expirationDate,
+                               imageName: "visa"
+                           )
+                           SavedCardsManager.shared.addCard(card)
+                           navigateToSavedCards = true
+                       }
+                   }
+                   .background(
+                       NavigationLink(destination: SavedCardsView(), isActive: $navigateToSavedCards) {
+                           EmptyView()
+                       }
+                   )
+                   .toolbar {
+                       ToolbarItem(placement: .navigationBarLeading) {
+                           Button(action: { dismiss() }) {
+                               Image(systemName: "chevron.left")
+                                   .foregroundColor(.orange)
+                           }
+                       }
+                   }
+               }
 
     func maskedCardNumber(_ number: String) -> String {
         let trimmed = number.filter { $0.isNumber }
@@ -176,6 +136,16 @@ struct Payment: View {
         return !paymentViewModel.cardNumber.isEmpty &&
                !paymentViewModel.expirationDate.isEmpty &&
                !paymentViewModel.cvv.isEmpty
+    }
+    
+    struct FormTextFieldStyle: ViewModifier {
+        func body(content: Content) -> some View {
+            content
+                .padding()
+                .background(Color(UIColor.secondarySystemBackground))
+                .cornerRadius(10)
+                .shadow(color: .gray.opacity(0.2), radius: 3, x: 1, y: 1)
+        }
     }
 }
 

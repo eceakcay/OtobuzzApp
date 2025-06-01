@@ -5,11 +5,6 @@
 //  Created by Mine Kırmacı on 20.04.2025.
 //
 
-//  BusJourneyListView.swift
-//  OtobuzzApp
-//
-//  Created by Mine Kırmacı on 20.04.2025.
-
 import SwiftUI
 
 struct BusJourneyListView: View {
