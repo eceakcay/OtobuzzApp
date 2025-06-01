@@ -1,37 +1,49 @@
 const nodemailer = require('nodemailer');
 
+require('dotenv').config(); 
+
+
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // Gmail kullanıyorsan
+  service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+    user: 'otobuzz0@gmail.com',        
+    pass: 'ltfhtjxpqobgzquw'            
   }
 });
 
-const sendTicketEmail = (to, ticketInfo) => {
+async function sendTicketEmail(toEmail, ticketInfo) {
   const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: to,
-    subject: 'Otobuzz - Bilet Bilgileriniz',
-    html: `
-      <h2>Sayın yolcumuz, biletiniz başarıyla alınmıştır.</h2>
-      <p><strong>Güzergah:</strong> ${ticketInfo.from} → ${ticketInfo.to}</p>
-      <p><strong>Tarih:</strong> ${ticketInfo.date}</p>
-      <p><strong>Saat:</strong> ${ticketInfo.time}</p>
-      <p><strong>Koltuk No:</strong> ${ticketInfo.seat}</p>
-      <p><strong>Firma:</strong> ${ticketInfo.company}</p>
-      <br>
-      <p>İyi yolculuklar dileriz. 🚍</p>
-    `
-  };
+    from: 'otobuzz0@gmail.com',
+    to: toEmail,
+    subject: '📩 Bilet İşleminiz Başarıyla Tamamlandı',
+    text: `
+Sayın Yolcumuz,
 
-return transporter.sendMail(mailOptions)
-  .then(info => {
-    console.log("✅ Mail gönderildi:", info.response);
-  })
-  .catch(err => {
-    console.error("❌ Mail gönderilemedi:", err);
-  });
-};
+Rezervasyon işleminiz başarıyla gerçekleştirilmiştir. Aşağıda biletinize ait detaylar yer almaktadır:
+
+━━━━━━━━━━━━━━━━━━━━━━
+🚌 Sefer Bilgileri:
+• Kalkış Noktası : ${ticketInfo.from}
+• Varış Noktası  : ${ticketInfo.to}
+• Tarih          : ${ticketInfo.date}
+• Saat           : ${ticketInfo.time}
+• Koltuk No      : ${ticketInfo.seat}
+• Firma          : ${ticketInfo.company}
+━━━━━━━━━━━━━━━━━━━━━━
+
+Yolculuğunuz süresince iyi vakit geçirmenizi dileriz.  
+Herhangi bir sorunla karşılaşmanız durumunda lütfen bizimle iletişime geçiniz.
+
+Saygılarımızla,  
+${ticketInfo.company} Müşteri Hizmetleri
+  `
+  };
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Mail gönderme hatası:', error);
+    throw error;
+  }
+}
 
 module.exports = { sendTicketEmail };
