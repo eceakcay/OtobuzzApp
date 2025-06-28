@@ -3,7 +3,6 @@ import SwiftUI
 struct BusSeatSelectionView: View {
     let journey: BusJourneyListViewModel.Journey
     @Environment(\.dismiss) var dismiss
-    @AppStorage("userId") var userId: String = ""
     @State private var isPaymentViewActive = false
     @State private var selectedSeat: BusJourneyListViewModel.Journey.Seat?
     @State private var showAlert = false
@@ -39,12 +38,7 @@ struct BusSeatSelectionView: View {
                 .background(contentBackground)
                 .padding(.horizontal, 20)
                 .navigationDestination(isPresented: $isPaymentViewActive) {
-                    Payment(
-                        journeyPrice: journey.price,
-                        selectedSeat: selectedSeat,
-                        tripId: journey.id.uuidString,
-                        userId: userId
-                    )
+                    Payment(journeyPrice: journey.price, selectedSeat: selectedSeat)
                 }
             }
         }

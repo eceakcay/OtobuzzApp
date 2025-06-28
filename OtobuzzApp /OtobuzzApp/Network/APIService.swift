@@ -54,16 +54,6 @@ class APIService {
         }.resume()
     }
     
-    func createTicket(ticket: TicketRequest, completion: @escaping (Bool) -> Void) {
-        post(endpoint: "tickets", body: ticket, responseType: TicketRequest.self) { result in
-            switch result {
-            case .success(_): completion(true)
-            case .failure(let error):
-                print("❌ Ticket gönderim hatası: \(error)")
-                completion(false)
-            }
-        }
-    }
     
     func getCities(completion: @escaping (Result<[String], Error>) -> Void) {
         get(endpoint: "trips/cities", responseType: [String].self, completion: completion)
