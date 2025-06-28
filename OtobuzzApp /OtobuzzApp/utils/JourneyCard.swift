@@ -115,6 +115,7 @@ struct JourneyCard: View {
 #Preview {
     JourneyCard(
         journey: BusJourneyListViewModel.Journey(
+            id: "mock-id-123",
             companyName: "EROVA",
             companyLogo: "erova_logo",
             departureTime: "01:00",

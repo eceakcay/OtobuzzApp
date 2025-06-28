@@ -1,4 +1,15 @@
+//
+//  BusSeatSelectionView.swift
+//  OtobuzzApp
+//
+//  Created by Mine Kırmacı on 20.04.2025.
+//
+
 import SwiftUI
+
+extension Notification.Name {
+    static let refreshJourneys = Notification.Name("refreshJourneys")
+}
 
 struct BusSeatSelectionView: View {
     let journey: BusJourneyListViewModel.Journey
@@ -104,11 +115,35 @@ struct BusSeatSelectionView: View {
 
     private var paymentButtonView: some View {
         Button(action: {
-            if selectedSeat != nil {
-                isPaymentViewActive = true
-            } else {
+            guard let selected = selectedSeat else {
                 showAlert = true
+                return
             }
+
+            let genderString = selected.gender == .female ? "Kadın" : "Erkek"
+
+            APIService.shared.updateSeat(for: journey.id, seatNumber: selected.id, gender: genderString) { result in
+                switch result {
+                case .success(let updatedTrip):
+                    print("✅ Güncellenen koltuklar: \(updatedTrip.koltuklar)")
+
+                    APIService.shared.getTripDetail(tripId: journey.id) { detailResult in
+                        switch detailResult {
+                        case .success(let tripDetail):
+                            DispatchQueue.main.async {
+                                NotificationCenter.default.post(name: .refreshJourneys, object: nil)
+                                isPaymentViewActive = true
+                            }
+                        case .failure(let error):
+                            print("❌ Detay güncellenemedi: \(error)")
+                        }
+                    }
+
+                case .failure(let error):
+                    print("❌ Koltuk güncelleme hatası: \(error)")
+                }
+            }
+
         }) {
             Text("Ödeme Sayfasına Git")
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
@@ -146,198 +181,86 @@ struct BusSeatSelectionView: View {
     }
 }
 
+// MARK: - SeatView
+
 struct SeatView: View {
     let seat: BusJourneyListViewModel.Journey.Seat
     @Binding var selectedSeat: BusJourneyListViewModel.Journey.Seat?
-    @State private var isPressed = false
     @State private var showGenderSelection = false
 
     var body: some View {
-        if seat.id == 0 {
-            Color.clear.frame(width: 40, height: 40)
-        } else {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(seatColor)
-                    .frame(width: 40, height: 40)
-                    .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 2)
+        ZStack {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(seatColor)
+                .frame(width: 40, height: 40)
 
-                Text("\(seat.id)")
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundColor(.white)
+            Text("\(seat.id)")
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundColor(.white)
+        }
+        .onTapGesture {
+            if !seat.isOccupied {
+                selectedSeat = seat
+                showGenderSelection = true
             }
-            .scaleEffect(isPressed ? 0.95 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
-            .onTapGesture {
-                if !seat.isOccupied {
-                    withAnimation { isPressed.toggle() }
-                    selectedSeat = seat
-                    showGenderSelection = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                        isPressed.toggle()
-                    }
-                }
-            }
-            .sheet(isPresented: $showGenderSelection) {
-                GenderSelectionView(seat: seat, selectedSeat: $selectedSeat)
-                    .presentationDetents([.height(240)])
-                    .presentationBackground(.ultraThinMaterial)
-                    .presentationCornerRadius(20)
-            }
+        }
+        .sheet(isPresented: $showGenderSelection) {
+            GenderSelectionView(seat: seat, selectedSeat: $selectedSeat)
         }
     }
 
     private var seatColor: Color {
-        if !seat.isOccupied {
+        if seat.isOccupied {
+            return seat.gender == .female ? .pink : .blue
+        } else {
             return selectedSeat?.id == seat.id ? .green : .gray.opacity(0.3)
         }
-        return seat.gender == .female ? .pink : .blue
     }
 }
+
+// MARK: - GenderSelectionView
 
 struct GenderSelectionView: View {
     let seat: BusJourneyListViewModel.Journey.Seat
     @Binding var selectedSeat: BusJourneyListViewModel.Journey.Seat?
     @Environment(\.dismiss) var dismiss
-    @State private var isFemalePressed = false
-    @State private var isMalePressed = false
 
     var body: some View {
         VStack(spacing: 20) {
+            Text("Cinsiyet Seçiniz")
+                .font(.headline)
+
             HStack(spacing: 20) {
-                GenderButton(
-                    title: "Kadın",
-                    icon: "person.crop.circle.fill",
-                    color: .pink.opacity(0.8),
-                    isPressed: $isFemalePressed,
-                    action: {
-                        withAnimation {
-                            isFemalePressed = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                isFemalePressed = false
-                            }
-                        }
-                        if let currentSeat = selectedSeat {
-                            selectedSeat = BusJourneyListViewModel.Journey.Seat(
-                                id: currentSeat.id,
-                                isOccupied: true,
-                                gender: .female
-                            )
-                        }
-                        dismiss()
-                    }
-                )
-
-                GenderButton(
-                    title: "Erkek",
-                    icon: "person.crop.circle.fill",
-                    color: .blue.opacity(0.8),
-                    isPressed: $isMalePressed,
-                    action: {
-                        withAnimation {
-                            isMalePressed = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                isMalePressed = false
-                            }
-                        }
-                        if let currentSeat = selectedSeat {
-                            selectedSeat = BusJourneyListViewModel.Journey.Seat(
-                                id: currentSeat.id,
-                                isOccupied: true,
-                                gender: .male
-                            )
-                        }
-                        dismiss()
-                    }
-                )
-            }
-
-            Button(action: {
-                withAnimation {
-                    selectedSeat = nil
+                Button("Kadın") {
+                    selectedSeat = BusJourneyListViewModel.Journey.Seat(id: seat.id, isOccupied: true, gender: .female)
                     dismiss()
                 }
-            }) {
-                Text("İptal")
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .foregroundColor(.gray)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(12)
+                .padding()
+                .background(Color.pink.opacity(0.8))
+                .foregroundColor(.white)
+                .cornerRadius(12)
+
+                Button("Erkek") {
+                    selectedSeat = BusJourneyListViewModel.Journey.Seat(id: seat.id, isOccupied: true, gender: .male)
+                    dismiss()
+                }
+                .padding()
+                .background(Color.blue.opacity(0.8))
+                .foregroundColor(.white)
+                .cornerRadius(12)
             }
-            .padding(.horizontal, 40)
+
+            Button("İptal") {
+                dismiss()
+            }
+            .foregroundColor(.gray)
         }
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color.white.opacity(0.9))
-                .shadow(radius: 8)
+                .fill(Color.white)
+                .shadow(radius: 10)
         )
         .padding()
-    }
-}
-
-struct GenderButton: View {
-    let title: String
-    let icon: String
-    let color: Color
-    @Binding var isPressed: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 10) {
-                Image(systemName: icon)
-                    .font(.system(size: 28))
-                    .foregroundColor(.white)
-
-                Text(title)
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white)
-            }
-            .frame(width: 120, height: 100)
-            .background(
-                LinearGradient(
-                    gradient: Gradient(colors: [color, color.opacity(0.7)]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            .cornerRadius(15)
-            .shadow(color: color.opacity(0.4), radius: 5, x: 0, y: 3)
-        }
-        .scaleEffect(isPressed ? 0.95 : 1.0)
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isPressed)
-    }
-}
-
-#Preview {
-    NavigationStack {
-        BusSeatSelectionView(
-            journey: BusJourneyListViewModel.Journey(
-                companyName: "EROVA",
-                companyLogo: "erova_logo",
-                departureTime: "01:00",
-                duration: "6s 1dk",
-                price: 460.0,
-                seatLayout: "2+1",
-                features: [],
-                seats: {
-                    var seatArray: [BusJourneyListViewModel.Journey.Seat] = []
-                    var seatNumber = 1
-                    for _ in 0..<10 {
-                        seatArray.append(.init(id: seatNumber, isOccupied: Bool.random(), gender: seatNumber % 4 == 0 ? .female : .male))
-                        seatNumber += 1
-                        seatArray.append(.init(id: seatNumber, isOccupied: Bool.random(), gender: seatNumber % 3 == 0 ? .female : .male))
-                        seatNumber += 1
-                        seatArray.append(.init(id: 0, isOccupied: false, gender: nil)) // koridor
-                        seatArray.append(.init(id: seatNumber, isOccupied: Bool.random(), gender: seatNumber % 2 == 0 ? .male : .female))
-                        seatNumber += 1
-                    }
-                    return seatArray
-                }()
-            )
-        )
     }
 }

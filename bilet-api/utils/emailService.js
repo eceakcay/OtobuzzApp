@@ -36,14 +36,16 @@ Herhangi bir sorunla karşılaşmanız durumunda lütfen bizimle iletişime geç
 
 Saygılarımızla,  
 ${ticketInfo.company} Müşteri Hizmetleri
-  `
+    `
   };
   try {
     await transporter.sendMail(mailOptions);
+    console.log(`📧 Mail gönderildi: ${toEmail}`); // 🔔 BURASI EKLENDİ
   } catch (error) {
     console.error('Mail gönderme hatası:', error);
     throw error;
   }
 }
+
 
 module.exports = { sendTicketEmail };

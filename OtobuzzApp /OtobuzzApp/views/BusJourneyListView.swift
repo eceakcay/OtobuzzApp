@@ -1,10 +1,3 @@
-//
-//  BusJourneyListView.swift
-//  OtobuzzApp
-//
-//  Created by Mine Kırmacı on 20.04.2025.
-//
-
 import SwiftUI
 
 struct BusJourneyListView: View {
@@ -156,11 +149,20 @@ struct BusJourneyListView: View {
             .onChange(of: viewModel.currentDate) { _ in
                 viewModel.loadJourneys()
             }
+            .onAppear {
+                NotificationCenter.default.addObserver(forName: .refreshJourneys, object: nil, queue: .main) { _ in
+                    viewModel.loadJourneys()
+                }
+            }
+            .onDisappear {
+                NotificationCenter.default.removeObserver(self, name: .refreshJourneys, object: nil)
+            }
             .navigationBarHidden(true)
         }
     }
 }
 
+// Preview
 #Preview {
     let homeViewModel = HomeViewModel()
     homeViewModel.nereden = "İstanbul"

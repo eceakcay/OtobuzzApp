@@ -54,6 +54,9 @@ class APIService {
         }.resume()
     }
     
+    func getTripDetail(tripId: String, completion: @escaping (Result<Trip, Error>) -> Void) {
+        get(endpoint: "trips/\(tripId)", responseType: Trip.self, completion: completion)
+    }
     
     func getCities(completion: @escaping (Result<[String], Error>) -> Void) {
         get(endpoint: "trips/cities", responseType: [String].self, completion: completion)
@@ -105,6 +108,53 @@ class APIService {
             }
         }.resume()
     }
+    
+    func updateSeat(for tripId: String, seatNumber: Int, gender: String, completion: @escaping (Result<Trip, Error>) -> Void) {
+        guard let url = URL(string: "\(baseURL)/trips/\(tripId)/seats") else {
+            completion(.failure(APIError.invalidURL))
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: Any] = [
+            "numara": seatNumber,
+            "cinsiyet": gender
+        ]
+
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        } catch {
+            completion(.failure(error))
+            return
+        }
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            guard let data = data else {
+                completion(.failure(APIError.noData))
+                return
+            }
+
+            do {
+                let updatedTrip = try JSONDecoder().decode(Trip.self, from: data)
+                completion(.success(updatedTrip))
+            } catch {
+                print("❌ JSON decode hatası: \(error.localizedDescription)")
+                if let responseString = String(data: data, encoding: .utf8) {
+                    print("🪵 Gelen veri: \(responseString)")
+                }
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+
 
     enum APIError: Error {
         case invalidURL

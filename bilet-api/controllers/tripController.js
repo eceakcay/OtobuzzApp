@@ -97,4 +97,45 @@ const updateTrip = async (req, res) => {
   }
 };
 
-module.exports = { createTrip, getTrips, getTripDetail,getCities,updateTrip };
+const getTripById = async (req, res) => {
+  try {
+    const trip = await Trip.findById(req.params.id);
+    if (!trip) {
+      return res.status(404).json({ message: 'Sefer bulunamadı' });
+    }
+    res.status(200).json(trip);
+  } catch (err) {
+    res.status(500).json({ message: 'Sunucu hatası', error: err.message || err });
+  }
+};
+
+// Tek bir koltuğu güncelle (örneğin: cinsiyet ve secili=true)
+const updateSeat = async (req, res) => {
+  try {
+    const tripId = req.params.id;
+    const { numara, cinsiyet } = req.body;
+
+    const trip = await Trip.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({ message: 'Sefer bulunamadı' });
+    }
+
+    const seatIndex = trip.koltuklar.findIndex(seat => seat.numara === numara);
+    if (seatIndex === -1) {
+      return res.status(404).json({ message: 'Koltuk numarası bulunamadı' });
+    }
+
+    trip.koltuklar[seatIndex].secili = true;
+    trip.koltuklar[seatIndex].cinsiyet = cinsiyet;
+
+    await trip.save();
+    res.status(200).json(trip);
+  } catch (error) {
+    console.error("❌ Koltuk güncelleme hatası:", error);
+    res.status(500).json({ message: 'Koltuk güncellenemedi', error });
+  }
+};
+
+
+
+module.exports = { createTrip, getTrips, getTripDetail,getCities,updateTrip,getTripById,updateSeat};

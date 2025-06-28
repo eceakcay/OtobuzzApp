@@ -5,8 +5,6 @@
 //  Created by Mine Kırmacı on 21.05.2025.
 //
 
-import Foundation
-
 struct Trip: Codable, Identifiable {
     let id: String
     let saat: String
@@ -15,7 +13,7 @@ struct Trip: Codable, Identifiable {
     let koltuklar: [Seat]
     let kalkisSehri: String
     let varisSehri: String
-    let tarih: String  // dilersen Date'e çevrilebilir
+    let tarih: String
 
     enum CodingKeys: String, CodingKey {
         case id = "_id"
@@ -23,8 +21,21 @@ struct Trip: Codable, Identifiable {
     }
 }
 
-struct Seat: Codable {
+struct Seat: Codable, Identifiable {
+    var id: Int { numara }
     let numara: Int
     let secili: Bool
-    let cinsiyet: String?
+    let cinsiyet: String
+
+    var isOccupied: Bool {
+        secili
+    }
+
+    var gender: Gender {
+        cinsiyet.lowercased() == "kadın" ? .female : .male
+    }
+
+    enum Gender {
+        case female, male
+    }
 }

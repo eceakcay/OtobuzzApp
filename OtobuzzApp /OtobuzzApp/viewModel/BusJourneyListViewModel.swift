@@ -18,7 +18,7 @@ class BusJourneyListViewModel: ObservableObject {
     }
 
     struct Journey: Identifiable {
-        let id = UUID()
+        let id: String
         let companyName: String
         let companyLogo: String
         let departureTime: String
@@ -55,6 +55,7 @@ class BusJourneyListViewModel: ObservableObject {
                 case .success(let trips):
                     let mapped = trips.map { trip in
                         Journey(
+                            id: trip.id,
                             companyName: trip.firma,
                             companyLogo: trip.firma.lowercased(),
                             departureTime: trip.saat,
