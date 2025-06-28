@@ -17,5 +17,5 @@
 4. Ödeme Yapma
 5. Ayarlar
 6. Yardım
-7.
-8.
+7. Biletlerim
+8. Kayıtlı Kartlarım
