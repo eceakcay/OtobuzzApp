@@ -1,11 +1,10 @@
 import SwiftUI
 
 struct ForgotPasswordView: View {
-    @State private var email: String = ""
-    @State private var isButtonPressed = false
+    @StateObject private var viewModel = ForgotPasswordViewModel()
     @State private var isTextFieldFocused = false
     @Environment(\.dismiss) var dismiss
-    
+
     var body: some View {
         ZStack {
             LinearGradient(
@@ -14,30 +13,31 @@ struct ForgotPasswordView: View {
                 endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
-            
+
             VStack(spacing: 24) {
                 Text("Şifremi Unuttum")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundColor(.orange)
                     .padding(.top, 20)
-                
-                Text("E-posta adresinize şifre sıfırlama bağlantısı göndereceğiz.")
+
+                Text("E-posta adresinize geçici şifre gönderilecektir.")
                     .font(.system(size: 16, design: .rounded))
                     .foregroundColor(.gray.opacity(0.8))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
-                
+
                 HStack {
                     Image(systemName: "envelope")
                         .foregroundColor(.orange.opacity(0.7))
                         .frame(width: 20)
-                    
-                    TextField("E-posta", text: $email)
+
+                    TextField("E-posta", text: $viewModel.email)
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
                         .font(.system(size: 16, design: .rounded))
                         .padding(.vertical, 12)
                         .accentColor(.orange)
+                        .disableAutocorrection(true)
                 }
                 .padding(.horizontal, 16)
                 .background(
@@ -52,20 +52,20 @@ struct ForgotPasswordView: View {
                         isTextFieldFocused = true
                     }
                 }
-                .onChange(of: email) { oldValue, newValue in
+                .onChange(of: viewModel.email) { _, _ in
                     withAnimation {
                         isTextFieldFocused = false
                     }
                 }
-                
+
+                if viewModel.isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .orange))
+                        .scaleEffect(1.2)
+                }
+
                 Button(action: {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                        isButtonPressed = true
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        isButtonPressed = false
-                        dismiss()
-                    }
+                    viewModel.resetPassword()
                 }) {
                     Text("Bağlantı Gönder")
                         .font(.system(size: 18, weight: .semibold, design: .rounded))
@@ -82,9 +82,10 @@ struct ForgotPasswordView: View {
                         .cornerRadius(15)
                         .shadow(color: .orange.opacity(0.3), radius: 6, x: 0, y: 4)
                 }
-                .scaleEffect(isButtonPressed ? 0.95 : 1.0)
+                .disabled(viewModel.email.isEmpty || viewModel.isLoading)
+                .scaleEffect(viewModel.email.isEmpty || viewModel.isLoading ? 0.95 : 1.0)
                 .padding(.top, 8)
-                
+
                 Spacer()
             }
             .padding(.horizontal, 32)
@@ -111,6 +112,17 @@ struct ForgotPasswordView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .alert(isPresented: $viewModel.showAlert) {
+            Alert(
+                title: Text(viewModel.isSuccess ? "Başarılı" : "Hata"),
+                message: Text(viewModel.alertMessage ?? ""),
+                dismissButton: .default(Text("Tamam")) {
+                    if viewModel.isSuccess {
+                        dismiss()
+                    }
+                }
+            )
+        }
     }
 }
 

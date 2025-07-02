@@ -73,6 +73,21 @@ class APIService {
         post(endpoint: endpoint, body: body, responseType: TicketResponse.self, completion: completion)
     }
 
+    // MARK: - Şifre Sıfırlama
+    func forgotPassword(email: String, completion: @escaping (Result<String, Error>) -> Void) {
+        let endpoint = "users/forgot-password"   // Burayı auth yerine users olarak değiştir
+        let body = ["email": email]
+        
+        post(endpoint: endpoint, body: body, responseType: ResponseMessage.self) { result in
+            switch result {
+            case .success(let response):
+                completion(.success(response.message))
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+
     // MARK: - Generic POST
     func post<T: Encodable, U: Decodable>(
         endpoint: String,
@@ -120,6 +135,11 @@ class APIService {
         }.resume()
     }
 
+    // MARK: - Response Message Model
+    struct ResponseMessage: Decodable {
+        let message: String
+    }
+
     // MARK: - Hata Enum'u
     enum APIError: Error {
         case invalidURL
@@ -128,3 +148,4 @@ class APIService {
         case decodingError(Error)
     }
 }
+

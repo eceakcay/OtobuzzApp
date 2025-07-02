@@ -5,7 +5,7 @@ struct Payment: View {
     @Environment(\.dismiss) var dismiss
     @State private var showSaveCardAlert = false
     @State private var goToTickets = false
-    @State private var createdTicketId: String? = nil // Ödeme tamamlamak için ticketId sakla
+    @State private var createdTicketId: String? = nil
 
     private let tripId: String
 
@@ -43,23 +43,27 @@ struct Payment: View {
                     TextField("Kart Numarası", text: $paymentViewModel.cardNumber)
                         .keyboardType(.numberPad)
                         .modifier(FormTextFieldStyle())
-                        .onChange(of: paymentViewModel.cardNumber) { _, newValue in
-                            paymentViewModel.cardNumber = paymentViewModel.filterInput(newValue)
+                        .onChange(of: paymentViewModel.cardNumber) { newValue in
+                            paymentViewModel.cardNumber = paymentViewModel.formatCardNumber(newValue)
                         }
 
                     HStack(spacing: 15) {
-                        TextField("Son Kullanma", text: $paymentViewModel.expirationDate)
+                        TextField("Son Kullanma (MM/YY)", text: $paymentViewModel.expirationDate)
                             .keyboardType(.numberPad)
                             .modifier(FormTextFieldStyle())
-                            .onChange(of: paymentViewModel.expirationDate) { _, newValue in
-                                paymentViewModel.expirationDate = paymentViewModel.filterInput(newValue)
+                            .onChange(of: paymentViewModel.expirationDate) { newValue in
+                                paymentViewModel.expirationDate = paymentViewModel.formatExpirationDate(newValue)
                             }
 
                         TextField("CVV", text: $paymentViewModel.cvv)
                             .keyboardType(.numberPad)
                             .modifier(FormTextFieldStyle())
-                            .onChange(of: paymentViewModel.cvv) { _, newValue in
-                                paymentViewModel.cvv = paymentViewModel.filterInput(newValue)
+                            .onChange(of: paymentViewModel.cvv) { newValue in
+                                var filtered = paymentViewModel.filterInput(newValue)
+                                if filtered.count > 3 {
+                                    filtered = String(filtered.prefix(3))
+                                }
+                                paymentViewModel.cvv = filtered
                             }
                     }
 
@@ -68,47 +72,46 @@ struct Payment: View {
                         .foregroundColor(.orange)
 
                     Button("Ödeme Yap") {
-                        paymentViewModel.processPayment()
+                        if paymentViewModel.processPayment() {
+                            // Kart bilgileri geçerliyse burası çalışır
 
-                        guard let selectedSeat = paymentViewModel.selectedSeat else { return }
-                        guard let userId = UserDefaults.standard.string(forKey: "loggedInUserId") else {
-                            print("❌ Kullanıcı ID'si bulunamadı")
-                            return
-                        }
+                            guard let selectedSeat = paymentViewModel.selectedSeat else { return }
+                            guard let userId = UserDefaults.standard.string(forKey: "loggedInUserId") else {
+                                print("❌ Kullanıcı ID'si bulunamadı")
+                                return
+                            }
 
-                        let ticketRequest = TicketRequest(
-                            userId: userId,
-                            tripId: tripId,
-                            koltukNo: selectedSeat.id,
-                            cinsiyet: selectedSeat.gender == .female ? "Kadın" : "Erkek"
-                        )
+                            let ticketRequest = TicketRequest(
+                                userId: userId,
+                                tripId: tripId,
+                                koltukNo: selectedSeat.id,
+                                cinsiyet: selectedSeat.gender == .female ? "Kadın" : "Erkek"
+                            )
 
-                        // 1) Bilet oluştur
-                        APIService.shared.createTicket(request: ticketRequest) { result in
-                            DispatchQueue.main.async {
-                                switch result {
-                                case .success(let response):
-                                    print("✅ Bilet oluşturuldu: \(response.message)")
+                            APIService.shared.createTicket(request: ticketRequest) { result in
+                                DispatchQueue.main.async {
+                                    switch result {
+                                    case .success(let response):
+                                        print("✅ Bilet oluşturuldu: \(response.message)")
 
-                                    if let ticket = response.ticket {
-                                        self.createdTicketId = ticket.id
+                                        if let ticket = response.ticket {
+                                            self.createdTicketId = ticket.id
 
-                                        // 2) Ödeme tamamla (backend'de koltuk doluluğu güncellenir)
-                                        APIService.shared.completePayment(ticketId: ticket.id) { payResult in
-                                            DispatchQueue.main.async {
-                                                switch payResult {
-                                                case .success(let payResponse):
-                                                    print("✅ Ödeme tamamlandı: \(payResponse.message)")
-
-                                                    showSaveCardAlert = true // Kart kaydetme alertini göster
-                                                case .failure(let payError):
-                                                    print("❌ Ödeme tamamlanamadı: \(payError)")
+                                            APIService.shared.completePayment(ticketId: ticket.id) { payResult in
+                                                DispatchQueue.main.async {
+                                                    switch payResult {
+                                                    case .success(let payResponse):
+                                                        print("✅ Ödeme tamamlandı: \(payResponse.message)")
+                                                        showSaveCardAlert = true
+                                                    case .failure(let payError):
+                                                        print("❌ Ödeme tamamlanamadı: \(payError)")
+                                                    }
                                                 }
                                             }
                                         }
+                                    case .failure(let error):
+                                        print("❌ Bilet oluşturulamadı: \(error)")
                                     }
-                                case .failure(let error):
-                                    print("❌ Bilet oluşturulamadı: \(error)")
                                 }
                             }
                         }
@@ -180,3 +183,13 @@ struct Payment: View {
         }
     }
 }
+
+#Preview {
+    NavigationStack {
+        // Örnek koltuk (BusJourneyListViewModel.Journey.Seat) nesnesi
+        let exampleSeat = BusJourneyListViewModel.Journey.Seat(id: 12, isOccupied: false, gender: .female)
+        
+        Payment(journeyPrice: 150.0, selectedSeat: exampleSeat, tripId: "exampleTripId123")
+    }
+}
+

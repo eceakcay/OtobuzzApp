@@ -1,16 +1,15 @@
 const nodemailer = require('nodemailer');
-
-require('dotenv').config(); 
-
+require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'otobuzz0@gmail.com',        
-    pass: 'ltfhtjxpqobgzquw'            
+    user: process.env.EMAIL_USER || 'otobuzz0@gmail.com',      // Mail kullanıcı adı (env dosyasından okunabilir)
+    pass: process.env.EMAIL_PASS || 'ltfhtjxpqobgzquw'         // Mail şifresi veya app password
   }
 });
 
+// Bilet maili gönderme fonksiyonu (zaten mevcut)
 async function sendTicketEmail(toEmail, ticketInfo) {
   const mailOptions = {
     from: 'otobuzz0@gmail.com',
@@ -40,12 +39,44 @@ ${ticketInfo.company} Müşteri Hizmetleri
   };
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`📧 Mail gönderildi: ${toEmail}`); // 🔔 BURASI EKLENDİ
+    console.log(`📧 Mail gönderildi: ${toEmail}`);
   } catch (error) {
     console.error('Mail gönderme hatası:', error);
     throw error;
   }
 }
 
+// Şifre sıfırlama için geçici şifre maili gönderme fonksiyonu
+async function sendPasswordResetEmail(toEmail, tempPassword) {
+  const mailOptions = {
+    from: 'otobuzz0@gmail.com',
+    to: toEmail,
+    subject: '🔑 Otobuzz Şifre Sıfırlama',
+    text: `
+Sayın Kullanıcımız,
 
-module.exports = { sendTicketEmail };
+Şifreniz sıfırlanmıştır. Aşağıdaki geçici şifre ile giriş yapabilirsiniz:
+
+Geçici Şifre: ${tempPassword}
+
+Lütfen uygulamaya giriş yaptıktan sonra şifrenizi değiştiriniz.
+
+Saygılarımızla,  
+Otobuzz Destek Ekibi
+    `
+  };
+
+  try {
+  await transporter.sendMail(mailOptions);
+  console.log(`📧 Şifre sıfırlama maili gönderildi: ${toEmail}`);
+} catch (error) {
+  console.error('Mail gönderilirken hata oluştu:', error);
+  throw error;
+}
+
+}
+
+module.exports = {
+  sendTicketEmail,
+  sendPasswordResetEmail
+};
