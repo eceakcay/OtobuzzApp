@@ -31,10 +31,9 @@ class LoginViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                    // ✅ Kullanıcı ID’sini kaydet (Profil ekranı buradan okuyacak)
                     UserDefaults.standard.set(response.userId, forKey: "loggedInUserId")
+                    UserDefaults.standard.set(response.userName, forKey: "loggedInUserName") // <- Burayı ekle
 
-                    // ✅ Konsola debug çıktısı
                     print("✅ Giriş başarılı, userId: \(response.userId)")
                     print("🧠 Kaydedilen ID (UserDefaults): \(UserDefaults.standard.string(forKey: "loggedInUserId") ?? "YOK")")
 

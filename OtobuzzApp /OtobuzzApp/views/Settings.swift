@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct Settings: View {
-    @State private var name: String = "Mine Kırmacı"
-    @State private var email: String = "mine.kirmaci@example.com"
+    @State private var name: String = UserDefaults.standard.string(forKey: "loggedInUserName") ?? ""
+    @State private var email: String = UserDefaults.standard.string(forKey: "loggedInUserEmail") ?? ""
     @State private var notificationsEnabled: Bool = true
     @State private var password: String = ""
     @State private var goToProfile = false
@@ -57,6 +57,11 @@ struct Settings: View {
 
                     // Kaydet Butonu
                     Button(action: {
+                        // Bilgileri UserDefaults'a kaydet
+                        UserDefaults.standard.set(name, forKey: "loggedInUserName")
+                        UserDefaults.standard.set(email, forKey: "loggedInUserEmail")
+                        // Şifre işlemi backend ile entegre edilebilir
+                        
                         print("Kaydedildi: \(name), \(email)")
                         goToProfile = true
                     }) {

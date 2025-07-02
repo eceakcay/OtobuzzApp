@@ -139,8 +139,9 @@ struct Payment: View {
                     goToTickets = true
                 }
                 Button("Evet") {
+                    let userName = UserDefaults.standard.string(forKey: "loggedInUserName") ?? "Kullanıcı"
                     let card = CardModel(
-                        cardHolderName: "Mine Kırmacı",
+                        cardHolderName: userName,
                         cardNumber: maskedCardNumber(paymentViewModel.cardNumber),
                         expiryDate: paymentViewModel.expirationDate,
                         imageName: "visa"

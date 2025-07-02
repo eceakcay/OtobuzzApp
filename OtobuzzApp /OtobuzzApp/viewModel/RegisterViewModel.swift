@@ -36,6 +36,8 @@ class RegisterViewModel: ObservableObject {
                 case .success(let response):
                     // ✅ Kayıt başarılı → ID'yi kaydet
                     UserDefaults.standard.set(response.user._id, forKey: "loggedInUserId")
+                    UserDefaults.standard.set(response.user.ad, forKey: "loggedInUserName") 
+
 
                     // ✅ Konsola debug çıktısı
                     print("✅ Kayıt başarılı, userId: \(response.user._id)")

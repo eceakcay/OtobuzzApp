@@ -44,11 +44,14 @@ const login = async (req, res) => {
     res.status(200).json({
       message: 'Giriş başarılı',
       token: token,
-      userId: user._id
+      userId: user._id,
+      userName: user.ad // Burada kullanıcı adını da döndürüyoruz
     });
   } catch (err) {
     res.status(500).json({ message: 'Sunucu hatası', error: err });
   }
 };
+
+
 
 module.exports = { login, register };
