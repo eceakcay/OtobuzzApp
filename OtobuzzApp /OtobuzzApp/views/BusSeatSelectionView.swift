@@ -1,10 +1,3 @@
-//
-//  BusSeatSelectionView.swift
-//  OtobuzzApp
-//
-//  Created by Mine Kırmacı on 20.04.2025.
-//
-
 import SwiftUI
 
 extension Notification.Name {
@@ -49,7 +42,7 @@ struct BusSeatSelectionView: View {
                 .background(contentBackground)
                 .padding(.horizontal, 20)
                 .navigationDestination(isPresented: $isPaymentViewActive) {
-                    Payment(journeyPrice: journey.price, selectedSeat: selectedSeat)
+                    Payment(journeyPrice: journey.price, selectedSeat: selectedSeat, tripId: journey.id)
                 }
             }
         }
@@ -115,35 +108,12 @@ struct BusSeatSelectionView: View {
 
     private var paymentButtonView: some View {
         Button(action: {
-            guard let selected = selectedSeat else {
+            guard selectedSeat != nil else {
                 showAlert = true
                 return
             }
-
-            let genderString = selected.gender == .female ? "Kadın" : "Erkek"
-
-            APIService.shared.updateSeat(for: journey.id, seatNumber: selected.id, gender: genderString) { result in
-                switch result {
-                case .success(let updatedTrip):
-                    print("✅ Güncellenen koltuklar: \(updatedTrip.koltuklar)")
-
-                    APIService.shared.getTripDetail(tripId: journey.id) { detailResult in
-                        switch detailResult {
-                        case .success(let tripDetail):
-                            DispatchQueue.main.async {
-                                NotificationCenter.default.post(name: .refreshJourneys, object: nil)
-                                isPaymentViewActive = true
-                            }
-                        case .failure(let error):
-                            print("❌ Detay güncellenemedi: \(error)")
-                        }
-                    }
-
-                case .failure(let error):
-                    print("❌ Koltuk güncelleme hatası: \(error)")
-                }
-            }
-
+            // Ödeme ekranına git (backend ödeme sonrası koltuk doluluğu güncellenir)
+            isPaymentViewActive = true
         }) {
             Text("Ödeme Sayfasına Git")
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
@@ -200,7 +170,8 @@ struct SeatView: View {
         }
         .onTapGesture {
             if !seat.isOccupied {
-                selectedSeat = seat
+                // isOccupied burada false kalacak, çünkü ödeme sonrası backend günceller
+                selectedSeat = BusJourneyListViewModel.Journey.Seat(id: seat.id, isOccupied: false, gender: seat.gender)
                 showGenderSelection = true
             }
         }
@@ -232,7 +203,8 @@ struct GenderSelectionView: View {
 
             HStack(spacing: 20) {
                 Button("Kadın") {
-                    selectedSeat = BusJourneyListViewModel.Journey.Seat(id: seat.id, isOccupied: true, gender: .female)
+                    // isOccupied false, çünkü ödeme sonrası backend dolu yapacak
+                    selectedSeat = BusJourneyListViewModel.Journey.Seat(id: seat.id, isOccupied: false, gender: .female)
                     dismiss()
                 }
                 .padding()
@@ -241,7 +213,7 @@ struct GenderSelectionView: View {
                 .cornerRadius(12)
 
                 Button("Erkek") {
-                    selectedSeat = BusJourneyListViewModel.Journey.Seat(id: seat.id, isOccupied: true, gender: .male)
+                    selectedSeat = BusJourneyListViewModel.Journey.Seat(id: seat.id, isOccupied: false, gender: .male)
                     dismiss()
                 }
                 .padding()

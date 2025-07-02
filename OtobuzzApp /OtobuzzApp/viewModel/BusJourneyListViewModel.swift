@@ -28,6 +28,10 @@ class BusJourneyListViewModel: ObservableObject {
         let features: [String]
         let seats: [Seat]
 
+        let departureCity: String
+        let arrivalCity: String
+        let date: String
+
         struct Seat: Identifiable {
             let id: Int
             let isOccupied: Bool
@@ -79,7 +83,10 @@ class BusJourneyListViewModel: ObservableObject {
                                         }
                                     }()
                                 )
-                            }
+                            },
+                            departureCity: trip.kalkisSehri,
+                            arrivalCity: trip.varisSehri,
+                            date: trip.tarih
                         )
                     }
                     self.journeys = mapped

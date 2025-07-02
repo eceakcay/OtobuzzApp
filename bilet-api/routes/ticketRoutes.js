@@ -1,10 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { buyTicket, getUserTickets, completePayment, reserveSeat } = require('../controllers/ticketController');
+const {
+  buyTicket,
+  getUserTickets,
+  completePayment,
+} = require('../controllers/ticketController');
 
-router.post('/reserve', reserveSeat); // 👈 Yeni endpoint
-router.post('/buy', buyTicket);              // Bilet satın al
-router.get('/user/:userId', getUserTickets); // Kullanıcıya ait biletleri getir
+// ✅ Bilet alma işlemi (doğrudan satın alma)
+router.post('/buy', buyTicket);
+
+// ✅ Kullanıcının biletlerini getir
+router.get('/user/:userId', getUserTickets);
+
+// (Opsiyonel) Ödeme işlemini tamamlama (eğer ayrı yapılıyorsa hâlâ kullanılabilir)
 router.post('/pay', completePayment);
 
 module.exports = router;

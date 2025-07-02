@@ -8,7 +8,7 @@ class PaymentViewModel: ObservableObject {
     @Published var paymentStatus: String = ""
     @Published var paymentStarted: Bool = false
     
-    private let selectedSeat: BusJourneyListViewModel.Journey.Seat?
+    let selectedSeat: BusJourneyListViewModel.Journey.Seat?
     
     // Formatlanmış ödeme miktarı (UI için)
     var formattedPaymentAmount: String {

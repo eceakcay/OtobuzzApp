@@ -25,14 +25,18 @@ struct Seat: Codable, Identifiable {
     var id: Int { numara }
     let numara: Int
     let secili: Bool
-    let cinsiyet: String
+    let cinsiyet: String?
 
     var isOccupied: Bool {
         secili
     }
 
     var gender: Gender {
-        cinsiyet.lowercased() == "kadın" ? .female : .male
+        if let cinsiyet = cinsiyet?.lowercased() {
+            return cinsiyet == "kadın" ? .female : .male
+        } else {
+            return .male // default fallback
+        }
     }
 
     enum Gender {

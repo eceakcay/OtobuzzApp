@@ -123,7 +123,10 @@ struct JourneyCard: View {
             price: 460.0,
             seatLayout: "2+1",
             features: ["Şehir İçi Servis", "100% İNDİRİM KODU"],
-            seats: []
+            seats: [],
+            departureCity: "Isparta",       // ✅ Yeni eklendi
+            arrivalCity: "Ankara",          // ✅ Yeni eklendi
+            date: "2025-07-10"
         ),
         from: "Isparta",
         to: "Ankara"
