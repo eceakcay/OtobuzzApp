@@ -21,7 +21,7 @@ async function sendTicketEmail(toEmail, ticketInfo) {
         </div>
 
         <div style="padding: 20px;">
-          <p>Sayın <strong>${ticketInfo.passengerName}</strong>,</p>
+          <p>Sayın Yolcumuz, </p>
           <p>Bilet satın alma işleminiz başarıyla tamamlanmıştır. Aşağıda seyahatinize ait detayları bulabilirsiniz:</p>
 
           <hr style="margin: 20px 0;">
