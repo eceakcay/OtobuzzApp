@@ -53,6 +53,6 @@ OtobuzzApp, kullanıcıların otobüs bileti araması, koltuk seçimi ve online 
 
 | Ana Sayfa | Sefer Listesi 1 | Sefer Listesi 2 | Koltuk Seçimi | Ödeme |
 |-----------|------------------|------------------|----------------|--------|
-| ![home](screenshots/home.png) | ![trip1](screenshots/trip1.png) | ![trip2](screenshots/trip2.png) | ![seats](screenshots/seats.png) | ![payment](screenshots/payment.png) |
+| ![home](screenshots/home.png) | ![trip1](screenshots/trips1.png) | ![trip2](screenshots/trips.png) | ![seats](screenshots/seats.png) | ![payment](screenshots/payment.png) |
 
 > Bu görseller uygulamanın gerçek çalışmasından alınmıştır.
