@@ -7,6 +7,7 @@ class PaymentViewModel: ObservableObject {
     @Published var paymentAmount: Double
     @Published var paymentStatus: String = ""
     @Published var paymentStarted: Bool = false
+    @Published var cardType: String? = nil // Kart türü (Visa, MasterCard, vb.)
     
     let selectedSeat: BusJourneyListViewModel.Journey.Seat?
     
@@ -55,7 +56,10 @@ class PaymentViewModel: ObservableObject {
             }
             result.append(char)
         }
-        return String(result.prefix(19)) // 16 rakam + 3 boşluk max
+        let formatted = String(result.prefix(19)) // 16 rakam + 3 boşluk max
+        // Kart türünü güncelle
+        self.cardType = detectCardType(digits)
+        return formatted
     }
     
     // Son kullanma tarihini MM/YY formatına dönüştürür
@@ -79,13 +83,35 @@ class PaymentViewModel: ObservableObject {
         return cvv.count == 3 && cvv.allSatisfy({ $0.isNumber })
     }
     
-    // Kart numarası (boşluk olmadan) 16 haneli rakam mı kontrol et
+    // Kart numarası (boşluk olmadan) 16 haneli rakam mı ve Luhn algoritmasına uygun mu kontrol et
     func isValidCardNumber(_ number: String) -> Bool {
         let digits = number.filter { $0.isNumber }
-        return digits.count == 16
+        guard digits.count == 16 else {
+            return false
+        }
+        
+        // Luhn algoritması
+        var sum = 0
+        var isEven = false
+        
+        for digit in digits.reversed() {
+            guard let number = Int(String(digit)) else {
+                return false
+            }
+            
+            if isEven {
+                let doubled = number * 2
+                sum += doubled > 9 ? doubled - 9 : doubled
+            } else {
+                sum += number
+            }
+            isEven.toggle()
+        }
+        
+        return sum % 10 == 0
     }
     
-    // Son kullanma tarihi MM/YY formatı mı ve geçerli tarih mi kontrolü (basit kontrol)
+    // Son kullanma tarihi MM/YY formatı mı ve geçerli tarih mi kontrolü
     func isValidExpirationDate(_ date: String) -> Bool {
         let regex = "^\\d{2}/\\d{2}$"
         guard NSPredicate(format: "SELF MATCHES %@", regex).evaluate(with: date) else {
@@ -103,7 +129,6 @@ class PaymentViewModel: ObservableObject {
             return false
         }
         
-        // Basit geçerlilik kontrolü (şu anki yılın son 2 hanesi)
         let calendar = Calendar.current
         let currentYear = calendar.component(.year, from: Date()) % 100
         let currentMonth = calendar.component(.month, from: Date())
@@ -118,6 +143,25 @@ class PaymentViewModel: ObservableObject {
     // Kullanıcının girdiği değerden sadece rakamları döner
     func filterInput(_ newValue: String) -> String {
         return newValue.filter { $0.isNumber }
+    }
+    
+    // Kart türünü tespit et
+    func detectCardType(_ number: String) -> String? {
+        let digits = number.filter { $0.isNumber }
+        guard !digits.isEmpty else { return nil }
+        
+        let prefix1 = digits.prefix(1)
+        let prefix2 = digits.prefix(2)
+        
+        switch prefix2 {
+        case "34", "37": return "American Express"
+        case "51"..."55": return "MasterCard"
+        default:
+            switch prefix1 {
+            case "4": return "Visa"
+            default: return nil
+            }
+        }
     }
     
     func isPaymentSuccessful() -> Bool {

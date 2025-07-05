@@ -6,6 +6,7 @@ struct Payment: View {
     @State private var showSaveCardAlert = false
     @State private var goToTickets = false
     @State private var createdTicketId: String? = nil
+    @State private var isCardNumberValid: Bool? = nil // Kart numarası doğrulama durumu
 
     private let tripId: String
 
@@ -40,16 +41,48 @@ struct Payment: View {
                         .fontWeight(.bold)
                         .foregroundColor(.orange)
 
-                    TextField("Kart Numarası", text: $paymentViewModel.cardNumber)
-                        .keyboardType(.numberPad)
-                        .modifier(FormTextFieldStyle())
-                        .onChange(of: paymentViewModel.cardNumber) { newValue in
-                            paymentViewModel.cardNumber = paymentViewModel.formatCardNumber(newValue)
+                    HStack {
+                        ZStack(alignment: .trailing) {
+                            TextField("Kart Numarası", text: $paymentViewModel.cardNumber)
+                                .keyboardType(.numberPad)
+                                .textContentType(.creditCardNumber)
+                                .autocorrectionDisabled()
+                                .modifier(FormTextFieldStyle())
+                                .onChange(of: paymentViewModel.cardNumber) { newValue in
+                                    let filtered = paymentViewModel.filterInput(newValue)
+                                    if filtered.count <= 16 {
+                                        paymentViewModel.cardNumber = paymentViewModel.formatCardNumber(newValue)
+                                        isCardNumberValid = filtered.count == 16 ? paymentViewModel.isValidCardNumber(paymentViewModel.cardNumber) : nil
+                                        print("Card Type: \(paymentViewModel.cardType ?? "nil")")
+                                    } else {
+                                        paymentViewModel.cardNumber = paymentViewModel.formatCardNumber(String(filtered.prefix(16)))
+                                        isCardNumberValid = paymentViewModel.isValidCardNumber(paymentViewModel.cardNumber)
+                                        print("Card Type: \(paymentViewModel.cardType ?? "nil")")
+                                    }
+                                }
+
+                            // Kart türü ikonu
+                            if let cardType = paymentViewModel.cardType {
+                                Image(cardType == "mastercard" ? "mastercard" : cardType.lowercased())
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 30, height: 20)
+                                    .padding(.trailing, 10)
+                            }
                         }
+
+
+                        if let isValid = isCardNumberValid {
+                            Image(systemName: isValid ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .foregroundColor(isValid ? .green : .red)
+                        }
+                    }
 
                     HStack(spacing: 15) {
                         TextField("Son Kullanma (MM/YY)", text: $paymentViewModel.expirationDate)
                             .keyboardType(.numberPad)
+                            .textContentType(.none)
+                            .autocorrectionDisabled()
                             .modifier(FormTextFieldStyle())
                             .onChange(of: paymentViewModel.expirationDate) { newValue in
                                 paymentViewModel.expirationDate = paymentViewModel.formatExpirationDate(newValue)
@@ -57,6 +90,8 @@ struct Payment: View {
 
                         TextField("CVV", text: $paymentViewModel.cvv)
                             .keyboardType(.numberPad)
+                            .textContentType(.none)
+                            .autocorrectionDisabled()
                             .modifier(FormTextFieldStyle())
                             .onChange(of: paymentViewModel.cvv) { newValue in
                                 var filtered = paymentViewModel.filterInput(newValue)
@@ -73,8 +108,6 @@ struct Payment: View {
 
                     Button("Ödeme Yap") {
                         if paymentViewModel.processPayment() {
-                            // Kart bilgileri geçerliyse burası çalışır
-
                             guard let selectedSeat = paymentViewModel.selectedSeat else { return }
                             guard let userId = UserDefaults.standard.string(forKey: "loggedInUserId") else {
                                 print("❌ Kullanıcı ID'si bulunamadı")
@@ -93,7 +126,6 @@ struct Payment: View {
                                     switch result {
                                     case .success(let response):
                                         print("✅ Bilet oluşturuldu: \(response.message)")
-
                                         if let ticket = response.ticket {
                                             self.createdTicketId = ticket.id
 
@@ -147,7 +179,7 @@ struct Payment: View {
                         cardHolderName: userName,
                         cardNumber: maskedCardNumber(paymentViewModel.cardNumber),
                         expiryDate: paymentViewModel.expirationDate,
-                        imageName: "visa"
+                        imageName: paymentViewModel.cardType == "mastercard" ? "mastercard" : paymentViewModel.cardType?.lowercased() ?? "visa"
                     )
                     SavedCardsManager.shared.addCard(card)
                     goToTickets = true
@@ -186,10 +218,7 @@ struct Payment: View {
 
 #Preview {
     NavigationStack {
-        // Örnek koltuk (BusJourneyListViewModel.Journey.Seat) nesnesi
         let exampleSeat = BusJourneyListViewModel.Journey.Seat(id: 12, isOccupied: false, gender: .female)
-        
         Payment(journeyPrice: 150.0, selectedSeat: exampleSeat, tripId: "exampleTripId123")
     }
 }
-
