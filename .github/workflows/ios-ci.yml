@@ -20,7 +20,7 @@ jobs:
 
       - name: Build project
         run: |
-          xcodebuild -project OtobuzzApp/OtobuzzApp.xcodeproj \
+          xcodebuild -project OtobuzzApp.xcodeproj \
                      -scheme OtobuzzApp \
                      -sdk iphonesimulator \
                      -destination 'platform=iOS Simulator,name=iPhone 14' \
@@ -28,7 +28,7 @@ jobs:
 
       - name: Run tests
         run: |
-          xcodebuild -project OtobuzzApp/OtobuzzApp.xcodeproj \
+          xcodebuild -project OtobuzzApp.xcodeproj \
                      -scheme OtobuzzApp \
                      -sdk iphonesimulator \
                      -destination 'platform=iOS Simulator,name=iPhone 14' \
