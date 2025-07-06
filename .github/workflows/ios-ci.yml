@@ -14,21 +14,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install dependencies
-        run: |
-          brew install swiftlint || true
+      - name: Install SwiftLint (optional)
+        run: brew install swiftlint || true
 
       - name: Build project
+        working-directory: OtobuzzApp
         run: |
-          xcodebuild -project OtobuzzApp.xcodeproj \
+          xcodebuild -project ../OtobuzzApp.xcodeproj \
                      -scheme OtobuzzApp \
                      -sdk iphonesimulator \
                      -destination 'platform=iOS Simulator,name=iPhone 14' \
                      clean build
 
       - name: Run tests
+        working-directory: OtobuzzApp
         run: |
-          xcodebuild -project OtobuzzApp.xcodeproj \
+          xcodebuild -project ../OtobuzzApp.xcodeproj \
                      -scheme OtobuzzApp \
                      -sdk iphonesimulator \
                      -destination 'platform=iOS Simulator,name=iPhone 14' \
